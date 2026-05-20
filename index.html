@@ -168,6 +168,7 @@
 <nav class="nav">
   <div class="nav-brand">🔬 QC Inspection <span>System</span></div>
   <button class="nav-tab active" onclick="showPage('form', this)">📋 บันทึกข้อมูล</button>
+  <button class="nav-tab" onclick="showPage('sv', this)">📈 บันทึก SV</button>
   <button class="nav-tab" onclick="showPage('dashboard', this)">📊 Dashboard</button>
   <button class="nav-tab" onclick="showPage('records', this)">📁 ข้อมูลทั้งหมด</button>
   <button class="nav-tab" onclick="showPage('authorize', this)">👤 Authorize</button>
@@ -319,6 +320,27 @@
         <div class="sizing-field"><div class="sf-label sf-maxlen">5. Max Length (mm.)</div><input type="number" id="f-maxlen" placeholder="0.00" step="0.01" /></div>
         <div class="sizing-field"><div class="sf-label sf-minlen">6. Min Length (mm.)</div><input type="number" id="f-minlen" placeholder="0.00" step="0.01" /></div>
         <div class="sizing-field"><div class="sf-label sf-sdlen">7. SD Length</div><input type="number" id="f-sdlen" placeholder="0.000" step="0.001" /></div>
+      </div>
+    </div>
+    <div class="divider"></div>
+    <div class="sizing-group">
+      <div class="sizing-group-label">🎨 13. Colors (CIE L*a*b*)</div>
+      <div class="sizing-row" style="grid-template-columns: repeat(3,1fr);">
+        <div class="sizing-field">
+          <div class="sf-label" style="color:#555;">L* (ความสว่าง)</div>
+          <input type="number" id="f-color-l" placeholder="0.00" step="0.01" min="0" max="100" />
+        </div>
+        <div class="sizing-field">
+          <div class="sf-label" style="color:#C0392B;">a* (แดง/เขียว)</div>
+          <input type="number" id="f-color-a" placeholder="0.00" step="0.01" min="-128" max="127" />
+        </div>
+        <div class="sizing-field">
+          <div class="sf-label" style="color:#2471A3;">b* (เหลือง/น้ำเงิน)</div>
+          <input type="number" id="f-color-b" placeholder="0.00" step="0.01" min="-128" max="127" />
+        </div>
+      </div>
+      <div id="color-preview-bar" style="margin-top:10px; height:32px; border-radius:var(--radius-sm); border:1px solid var(--border); background:#ccc; transition:background 0.3s; display:flex; align-items:center; justify-content:center;">
+        <span id="color-preview-label" style="font-size:11px; color:rgba(255,255,255,0.85); font-weight:500; text-shadow:0 1px 2px rgba(0,0,0,0.4);">ตัวอย่างสี (L* a* b*)</span>
       </div>
     </div>
     <div class="ts-bar">
@@ -473,6 +495,7 @@
             <th>Feed Code</th><th>Die Size</th><th>Main Formula</th><th>Sub Formula</th><th>SV</th><th>CP</th><th>Sinking</th>
             <th>Under%</th><th>Insize%</th><th>Upper%</th><th>Diameter</th>
             <th>Min.Len</th><th>Max.Len</th><th>SD Len</th>
+            <th>L*</th><th>a*</th><th>b*</th>
             <th>บันทึกเมื่อ</th><th></th>
           </tr>
         </thead>
@@ -482,9 +505,100 @@
   </div>
 </div>
 
+<!-- SV PAGE -->
+<div class="page" id="page-sv">
+  <div style="max-width:900px;">
+    <div class="dash-header">
+      <h2>📈 บันทึกค่า SV</h2>
+    </div>
+
+    <!-- SV FORM -->
+    <div class="card" style="margin-bottom:16px;">
+      <div class="card-title">ข้อมูลทั่วไป</div>
+      <div class="grid-2">
+        <div class="field"><label>วันที่</label><input type="date" id="sv-date" /></div>
+        <div class="field"><label>เวลา</label><input type="time" id="sv-time" /></div>
+      </div>
+      <div style="height:10px;"></div>
+      <div class="grid-2">
+        <div class="field">
+          <label>Inspector</label>
+          <select id="sv-inspector">
+            <option value="">-- Select --</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Shift</label>
+          <select id="sv-shift">
+            <option value="">-- Select --</option>
+            <option>P1</option><option>P2</option><option>P3</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- SV INPUT TABLE -->
+    <div class="card" style="margin-bottom:16px;">
+      <div class="card-title">ค่า SV แต่ละ Line <span style="font-weight:400;font-size:11px;color:var(--text3);">— กรอกเฉพาะที่มีข้อมูล</span></div>
+      <div style="overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;font-size:13px;">
+          <thead>
+            <tr>
+              <th style="padding:8px 12px;background:var(--bg);border-bottom:1px solid var(--border);text-align:left;font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.05em;white-space:nowrap;">LINE</th>
+              <th style="padding:8px 12px;background:var(--bg);border-bottom:1px solid var(--border);text-align:left;font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.05em;white-space:nowrap;">Main Formula</th>
+              <th style="padding:8px 12px;background:var(--bg);border-bottom:1px solid var(--border);text-align:left;font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.05em;white-space:nowrap;">Sub Formula</th>
+              <th style="padding:8px 12px;background:var(--bg);border-bottom:1px solid var(--border);text-align:left;font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.05em;white-space:nowrap;">Feed Code</th>
+              <th style="padding:8px 12px;background:var(--bg);border-bottom:1px solid var(--border);text-align:left;font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.05em;white-space:nowrap;">SV</th>
+              <th style="padding:8px 12px;background:var(--bg);border-bottom:1px solid var(--border);text-align:left;font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.05em;white-space:nowrap;">Spec</th>
+              <th style="padding:8px 12px;background:var(--bg);border-bottom:1px solid var(--border);text-align:left;font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.05em;white-space:nowrap;">Status</th>
+            </tr>
+          </thead>
+          <tbody id="sv-input-rows"></tbody>
+        </table>
+      </div>
+      <button class="submit-btn" style="margin-top:14px;" onclick="saveSVRecord()">💾 บันทึกค่า SV</button>
+    </div>
+
+    <!-- SV HISTORY CHART -->
+    <div class="card" style="margin-bottom:16px;">
+      <div class="card-title">กราฟแนวโน้ม SV แยกตาม LINE</div>
+      <div style="height:260px;"><canvas id="sv-history-chart"></canvas></div>
+    </div>
+
+    <!-- SV HISTORY TABLE -->
+    <div class="table-card">
+      <div class="table-header">
+        <h3>ประวัติค่า SV</h3>
+        <span class="count" id="sv-rec-count">0 รายการ</span>
+        <button class="btn btn-excel" style="margin-left:auto;" onclick="exportSVExcel()">⬇ Export Excel</button>
+      </div>
+      <div style="overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;font-size:12px;">
+          <thead>
+            <tr>
+              <th style="padding:10px 12px;background:var(--bg);border-bottom:1px solid var(--border);text-align:left;font-size:11px;color:var(--text2);white-space:nowrap;">#</th>
+              <th style="padding:10px 12px;background:var(--bg);border-bottom:1px solid var(--border);text-align:left;font-size:11px;color:var(--text2);white-space:nowrap;">วันที่</th>
+              <th style="padding:10px 12px;background:var(--bg);border-bottom:1px solid var(--border);text-align:left;font-size:11px;color:var(--text2);white-space:nowrap;">เวลา</th>
+              <th style="padding:10px 12px;background:var(--bg);border-bottom:1px solid var(--border);text-align:left;font-size:11px;color:var(--text2);white-space:nowrap;">Inspector</th>
+              <th style="padding:10px 12px;background:var(--bg);border-bottom:1px solid var(--border);text-align:left;font-size:11px;color:var(--text2);white-space:nowrap;">Shift</th>
+              <th style="padding:10px 12px;background:var(--bg);border-bottom:1px solid var(--border);text-align:left;font-size:11px;color:var(--text2);white-space:nowrap;">LINE</th>
+              <th style="padding:10px 12px;background:var(--bg);border-bottom:1px solid var(--border);text-align:left;font-size:11px;color:var(--text2);white-space:nowrap;">Formula</th>
+              <th style="padding:10px 12px;background:var(--bg);border-bottom:1px solid var(--border);text-align:left;font-size:11px;color:var(--text2);white-space:nowrap;">Sub</th>
+              <th style="padding:10px 12px;background:var(--bg);border-bottom:1px solid var(--border);text-align:left;font-size:11px;color:var(--text2);white-space:nowrap;">Feed Code</th>
+              <th style="padding:10px 12px;background:var(--bg);border-bottom:1px solid var(--border);text-align:left;font-size:11px;color:var(--text2);white-space:nowrap;">SV</th>
+              <th style="padding:10px 12px;background:var(--bg);border-bottom:1px solid var(--border);text-align:left;font-size:11px;color:var(--text2);white-space:nowrap;">Status</th>
+              <th style="padding:10px 12px;background:var(--bg);border-bottom:1px solid var(--border);text-align:left;font-size:11px;color:var(--text2);white-space:nowrap;"></th>
+            </tr>
+          </thead>
+          <tbody id="sv-history-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- AUTHORIZE PAGE -->
-<div class="page" id="page-authorize">
-  <div class="auth-header">
+<div class="page" id="page-authorize">  <div class="auth-header">
     <h2>👤 Authorize Inspector</h2>
     <button class="btn btn-primary" onclick="openAddModal()">+ เพิ่ม Inspector</button>
   </div>
@@ -626,6 +740,8 @@ let charts = {};
 const now = new Date();
 document.getElementById('f-date').value = now.toISOString().split('T')[0];
 document.getElementById('f-time').value = now.toTimeString().slice(0,5);
+document.getElementById('sv-date').value = now.toISOString().split('T')[0];
+document.getElementById('sv-time').value = now.toTimeString().slice(0,5);
 renderAuthGrid();
 
 // ---- NAV ----
@@ -637,6 +753,7 @@ function showPage(name, el) {
   if (name === 'dashboard') renderDashboard();
   if (name === 'records') renderTable();
   if (name === 'authorize') renderAuthGrid();
+  if (name === 'sv') renderSVPage();
 }
 
 // ---- FORM ----
@@ -651,6 +768,43 @@ function toggleOthers() {
   document.getElementById('others-field').style.display = val === 'Others' ? '' : 'none';
   if (val !== 'Others') document.getElementById('f-formula-others').value = '';
 }
+
+function labToRgb(L, a, b) {
+  let y = (L + 16) / 116, x = a / 500 + y, z = y - b / 200;
+  x = 0.95047 * (x*x*x > 0.008856 ? x*x*x : (x - 16/116) / 7.787);
+  y = 1.00000 * (y*y*y > 0.008856 ? y*y*y : (y - 16/116) / 7.787);
+  z = 1.08883 * (z*z*z > 0.008856 ? z*z*z : (z - 16/116) / 7.787);
+  let r = x*3.2406 + y*-1.5372 + z*-0.4986;
+  let g = x*-0.9689 + y*1.8758 + z*0.0415;
+  let bv = x*0.0557 + y*-0.2040 + z*1.0570;
+  r = r > 0.0031308 ? 1.055*Math.pow(r,1/2.4)-0.055 : 12.92*r;
+  g = g > 0.0031308 ? 1.055*Math.pow(g,1/2.4)-0.055 : 12.92*g;
+  bv= bv> 0.0031308 ? 1.055*Math.pow(bv,1/2.4)-0.055 : 12.92*bv;
+  return [Math.round(Math.min(Math.max(r,0),1)*255), Math.round(Math.min(Math.max(g,0),1)*255), Math.round(Math.min(Math.max(bv,0),1)*255)];
+}
+
+function updateColorPreview() {
+  const L = parseFloat(document.getElementById('f-color-l').value);
+  const a = parseFloat(document.getElementById('f-color-a').value);
+  const b = parseFloat(document.getElementById('f-color-b').value);
+  const bar = document.getElementById('color-preview-bar');
+  const lbl = document.getElementById('color-preview-label');
+  if (!isNaN(L) && !isNaN(a) && !isNaN(b)) {
+    const [r,g,bv] = labToRgb(L,a,b);
+    bar.style.background = `rgb(${r},${g},${bv})`;
+    const brightness = (r*299 + g*587 + bv*114) / 1000;
+    lbl.style.color = brightness > 128 ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,0.85)';
+    lbl.textContent = `L*${L}  a*${a}  b*${b}  →  rgb(${r}, ${g}, ${bv})`;
+  } else {
+    bar.style.background = 'var(--bg)';
+    lbl.style.color = 'var(--text3)';
+    lbl.textContent = 'ตัวอย่างสี (กรอก L* a* b*)';
+  }
+}
+
+['f-color-l','f-color-a','f-color-b'].forEach(id => {
+  document.getElementById(id).addEventListener('input', updateColorPreview);
+});
 
 function g(id) { return document.getElementById(id).value; }
 
@@ -671,6 +825,7 @@ async function saveRecord() {
     under: g('f-under'), insize: g('f-insize'), upper: g('f-upper'),
     diameter: g('f-diameter'),
     minlen: g('f-minlen'), maxlen: g('f-maxlen'), sdlen: g('f-sdlen'),
+    colorL: g('f-color-l'), colorA: g('f-color-a'), colorB: g('f-color-b'),
     savedAt: tsStr
   };
 
@@ -952,6 +1107,7 @@ function renderTable() {
       <td>${r.sv}</td><td>${r.cp}</td><td>${r.sinktime}</td>
       <td>${r.under}</td><td>${r.insize}</td><td>${r.upper}</td><td>${r.diameter||''}</td>
       <td>${r.minlen}</td><td>${r.maxlen}</td><td>${r.sdlen}</td>
+      <td>${r.colorL||''}</td><td>${r.colorA||''}</td><td>${r.colorB||''}</td>
       <td style="font-size:11px;color:var(--text3);">${r.savedAt}</td>
       <td><button class="del-btn" onclick="deleteRecord(${r.id})" title="ลบ">🗑</button></td>
     </tr>`).join('');
@@ -975,14 +1131,16 @@ function clearFilters() {
 // ---- EXCEL ----
 function exportExcel() {
   if (records.length === 0) { alert('ไม่มีข้อมูลสำหรับ Export'); return; }
-  const headers = ['#','วันที่','เวลา','Inspector','Shift','Check','Sampling','LINE','Lot','Feed Code','Die Size','Main Formula','Sub Formula','SV','CP','Sinking Time','Under%','Insize%','Upper%','Diameter(mm.)','Min Length','Max Length','SD Length','บันทึกเมื่อ'];
+  const headers = ['#','วันที่','เวลา','Inspector','Shift','Check','Sampling','LINE','Lot','Feed Code','Die Size','Main Formula','Sub Formula','SV','CP','Sinking Time','Under%','Insize%','Upper%','Diameter(mm.)','Min Length','Max Length','SD Length','L*','a*','b*','บันทึกเมื่อ'];
   const rows = records.map((r, i) => [
     i+1, r.date, r.time, r.inspector, r.shift,
     r.purpose === 'round' ? 'ตามรอบ' : 'Recheck',
     r.sampling, r.line, r.lot, r.feedcode, r.diesize, r.formula||'', r.subformula||'',
     r.sv, r.cp, r.sinktime,
     r.under, r.insize, r.upper, r.diameter||'',
-    r.minlen, r.maxlen, r.sdlen, r.savedAt
+    r.minlen, r.maxlen, r.sdlen,
+    r.colorL||'', r.colorA||'', r.colorB||'',
+    r.savedAt
   ]);
   const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
   ws['!cols'] = headers.map(() => ({ wch: 14 }));
@@ -1005,9 +1163,250 @@ function exportExcel() {
   XLSX.writeFile(wb, fname);
 }
 
-// ---- QR CODE ----
+// ---- SV PAGE ----
+const SV_SPEC = {
+  '701P': { min:70, max:110 }, '901P': { min:70, max:110 },
+  'POLY': { min:80, max:120 },
+};
+const LINES = ['Line 1','Line 2','Line 3','Line 4','Line 5','Line 6','Line 7','Line 8'];
+let svRecords = JSON.parse(localStorage.getItem('qc_sv_records') || '[]');
+let svChart = null;
+
+function renderSVPage() {
+  // sync inspector dropdown
+  const sel = document.getElementById('sv-inspector');
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">-- Select --</option>' +
+    inspectors.filter(i=>i.active).map(i=>`<option${i.name===cur?' selected':''}>${i.name}</option>`).join('');
+  renderSVInputRows();
+  renderSVHistory();
+}
+
+function getSVSpec() {
+  const formula = document.getElementById('sv-formula').value;
+  return SV_SPEC[formula] || null;
+}
+
+function svStatus(sv, spec) {
+  if (!spec || isNaN(sv)) return '<span style="color:var(--text3);">—</span>';
+  if (sv < spec.min || sv > spec.max)
+    return '<span style="background:var(--red-light);color:var(--red-dark);padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;">🚨 เกิน Spec</span>';
+  return '<span style="background:var(--green-light);color:var(--green-dark);padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;">✅ OK</span>';
+}
+
+const FORMULA_OPTS = ['701P','901P','POLY','MS3618','TNT','NF','Broodstock','Others'];
+const SUBFORMULA_OPTS = ['P','S','G','NK','B1','B2','B3','NONE'];
+
+function renderSVInputRows() {
+  const tbody = document.getElementById('sv-input-rows');
+  tbody.innerHTML = LINES.map(l => {
+    const id = l.replace(' ','');
+    const formulaOpts    = FORMULA_OPTS.map(f    => `<option value="${f}">${f}</option>`).join('');
+    const subformulaOpts = SUBFORMULA_OPTS.map(f => `<option value="${f}">${f}</option>`).join('');
+    return `
+    <tr>
+      <td style="padding:8px 12px;border-bottom:1px solid rgba(0,0,0,0.05);font-weight:600;white-space:nowrap;">${l}</td>
+      <td style="padding:8px 12px;border-bottom:1px solid rgba(0,0,0,0.05);">
+        <select id="sv-formula-${id}" onchange="updateSVStatus('${l}')"
+          style="border:1px solid var(--border);border-radius:6px;padding:6px 8px;font-size:13px;font-family:inherit;background:var(--surface);color:var(--text);outline:none;width:110px;">
+          <option value="">—</option>${formulaOpts}
+        </select>
+      </td>
+      <td style="padding:8px 12px;border-bottom:1px solid rgba(0,0,0,0.05);">
+        <select id="sv-subformula-${id}"
+          style="border:1px solid var(--border);border-radius:6px;padding:6px 8px;font-size:13px;font-family:inherit;background:var(--surface);color:var(--text);outline:none;width:80px;">
+          <option value="">—</option>${subformulaOpts}
+        </select>
+      </td>
+      <td style="padding:8px 12px;border-bottom:1px solid rgba(0,0,0,0.05);">
+        <input type="text" id="sv-feedcode-${id}" placeholder="Feed code"
+          style="width:110px;border:1px solid var(--border);border-radius:6px;padding:6px 8px;font-size:13px;font-family:inherit;outline:none;" />
+      </td>
+      <td style="padding:8px 12px;border-bottom:1px solid rgba(0,0,0,0.05);">
+        <input type="number" id="sv-val-${id}" placeholder="—" step="0.1"
+          style="width:90px;border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-size:14px;font-family:monospace;outline:none;"
+          oninput="updateSVStatus('${l}')" />
+      </td>
+      <td style="padding:8px 12px;border-bottom:1px solid rgba(0,0,0,0.05);color:var(--text3);white-space:nowrap;" id="sv-spectext-${id}">—</td>
+      <td style="padding:8px 12px;border-bottom:1px solid rgba(0,0,0,0.05);" id="sv-status-${id}">—</td>
+    </tr>`;
+  }).join('');
+}
+
+function getSVSpec(formula) {
+  return SV_SPEC[formula] || null;
+}
+
+function updateSVStatus(line) {
+  const id = line.replace(' ','');
+  const formula = document.getElementById('sv-formula-' + id).value;
+  const val = parseFloat(document.getElementById('sv-val-' + id).value);
+  const spec = getSVSpec(formula);
+  document.getElementById('sv-spectext-' + id).textContent = spec ? spec.min + ' – ' + spec.max : '—';
+  document.getElementById('sv-status-' + id).innerHTML = svStatus(val, spec);
+}
+
+function saveSVRecord() {
+  const saved = new Date();
+  const tsStr = saved.toLocaleDateString('th-TH',{day:'2-digit',month:'2-digit',year:'numeric'})+' '+
+                saved.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  const base = {
+    date: document.getElementById('sv-date').value,
+    time: document.getElementById('sv-time').value,
+    inspector: document.getElementById('sv-inspector').value,
+    shift: document.getElementById('sv-shift').value,
+    savedAt: tsStr,
+  };
+  let added = 0;
+  LINES.forEach(l => {
+    const id = l.replace(' ','');
+    const val = document.getElementById('sv-val-' + id).value;
+    if (val === '' || isNaN(parseFloat(val))) return;
+    const formula     = document.getElementById('sv-formula-'     + id).value;
+    const subformula  = document.getElementById('sv-subformula-'  + id).value;
+    const feedcode    = document.getElementById('sv-feedcode-'    + id).value;
+    svRecords.unshift({ ...base, id: Date.now() + Math.random(), line: l, formula, subformula, feedcode, sv: parseFloat(val) });
+    added++;
+  });
+  if (added === 0) { alert('กรุณากรอกค่า SV อย่างน้อย 1 LINE'); return; }
+  localStorage.setItem('qc_sv_records', JSON.stringify(svRecords));
+
+  // clear inputs
+  LINES.forEach(l => {
+    const id = l.replace(' ','');
+    document.getElementById('sv-val-'         + id).value = '';
+    document.getElementById('sv-formula-'     + id).value = '';
+    document.getElementById('sv-subformula-'  + id).value = '';
+    document.getElementById('sv-feedcode-'    + id).value = '';
+    document.getElementById('sv-status-'      + id).innerHTML = '—';
+    document.getElementById('sv-spectext-'    + id).textContent = '—';
+  });
+
+  const toast = document.getElementById('success-toast');
+  toast.style.display = 'block';
+  toast.style.background = 'var(--green-light)';
+  toast.style.color = 'var(--green-dark)';
+  toast.textContent = '⏳ กำลังบันทึก ' + added + ' รายการไปยัง Google Sheets...';
+
+  // ส่งแต่ละ LINE ไป Google Sheets
+  svRecords.slice(0, added).forEach(rec => {
+    const iframeName = 'sv_iframe_' + Date.now() + Math.random();
+    const iframe = document.createElement('iframe');
+    iframe.name = iframeName;
+    iframe.style.display = 'none';
+    document.body.appendChild(iframe);
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = SHEETS_URL;
+    form.target = iframeName;
+    form.style.display = 'none';
+    Object.entries({ ...rec, dataType: 'sv' }).forEach(([k,v]) => {
+      const input = document.createElement('input');
+      input.type = 'hidden'; input.name = k; input.value = v ?? '';
+      form.appendChild(input);
+    });
+    document.body.appendChild(form);
+    form.submit();
+    setTimeout(() => {
+      document.body.removeChild(form);
+      document.body.removeChild(iframe);
+    }, 3000);
+  });
+
+  setTimeout(() => {
+    toast.textContent = '✅ บันทึกค่า SV สำเร็จ ' + added + ' รายการ';
+    setTimeout(() => { toast.style.display = 'none'; }, 3000);
+  }, 2000);
+  renderSVHistory();
+}
+
+function renderSVHistory() {
+  document.getElementById('sv-rec-count').textContent = svRecords.length + ' รายการ';
+  const tbody = document.getElementById('sv-history-body');
+  if (svRecords.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="11"><div class="empty-state"><div class="icon">📭</div>ยังไม่มีข้อมูล</div></td></tr>';
+  } else {
+    const spec_map = SV_SPEC;
+    tbody.innerHTML = svRecords.map((r,i) => {
+      const spec = spec_map[r.formula];
+      const ok = spec && !isNaN(r.sv) ? (r.sv >= spec.min && r.sv <= spec.max) : null;
+      const badge = ok === null ? '—' : ok
+        ? '<span style="background:var(--green-light);color:var(--green-dark);padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;">✅ OK</span>'
+        : '<span style="background:var(--red-light);color:var(--red-dark);padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;">🚨 เกิน</span>';
+      return `<tr>
+        <td style="padding:10px 12px;border-bottom:1px solid rgba(0,0,0,0.05);">${svRecords.length-i}</td>
+        <td style="padding:10px 12px;border-bottom:1px solid rgba(0,0,0,0.05);">${r.date}</td>
+        <td style="padding:10px 12px;border-bottom:1px solid rgba(0,0,0,0.05);">${r.time}</td>
+        <td style="padding:10px 12px;border-bottom:1px solid rgba(0,0,0,0.05);">${r.inspector}</td>
+        <td style="padding:10px 12px;border-bottom:1px solid rgba(0,0,0,0.05);">${r.shift}</td>
+        <td style="padding:10px 12px;border-bottom:1px solid rgba(0,0,0,0.05);font-weight:500;">${r.line}</td>
+        <td style="padding:10px 12px;border-bottom:1px solid rgba(0,0,0,0.05);">${r.formula}</td>
+        <td style="padding:10px 12px;border-bottom:1px solid rgba(0,0,0,0.05);">${r.subformula||'—'}</td>
+        <td style="padding:10px 12px;border-bottom:1px solid rgba(0,0,0,0.05);">${r.feedcode}</td>
+        <td style="padding:10px 12px;border-bottom:1px solid rgba(0,0,0,0.05);font-weight:700;font-family:monospace;">${r.sv}</td>
+        <td style="padding:10px 12px;border-bottom:1px solid rgba(0,0,0,0.05);">${badge}</td>
+        <td style="padding:10px 12px;border-bottom:1px solid rgba(0,0,0,0.05);">
+          <button class="del-btn" onclick="deleteSVRecord('${r.id}')">🗑</button>
+        </td>
+      </tr>`;
+    }).join('');
+  }
+
+  // draw chart
+  const dateKeys = [...new Set(svRecords.map(r=>r.date))].sort();
+  const activeLines = LINES.filter(l => svRecords.some(r=>r.line===l));
+  const datasets = activeLines.map((l,i) => ({
+    label: l,
+    data: dateKeys.map(d => {
+      const recs = svRecords.filter(r=>r.date===d && r.line===l);
+      return recs.length ? recs.reduce((a,b)=>a+b.sv,0)/recs.length : null;
+    }),
+    borderColor: LINE_COLORS[i % LINE_COLORS.length],
+    backgroundColor: 'transparent',
+    tension: 0.3, pointRadius: 4, fill: false, spanGaps: true
+  }));
+  if (svChart) svChart.destroy();
+  const ctx = document.getElementById('sv-history-chart');
+  if (ctx) {
+    svChart = new Chart(ctx, {
+      type: 'line',
+      data: { labels: dateKeys, datasets },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: true, position: 'bottom', labels: { font: { size: 11 } } } },
+        scales: {
+          x: { ticks: { font: { size: 10 } }, grid: { display: false } },
+          y: { ticks: { font: { size: 11 } }, grid: { color: 'rgba(0,0,0,0.05)' } }
+        }
+      }
+    });
+  }
+}
+
+function deleteSVRecord(id) {
+  if (!confirm('ต้องการลบรายการนี้?')) return;
+  svRecords = svRecords.filter(r => String(r.id) !== String(id));
+  localStorage.setItem('qc_sv_records', JSON.stringify(svRecords));
+  renderSVHistory();
+}
+
+function exportSVExcel() {
+  if (svRecords.length === 0) { alert('ไม่มีข้อมูล SV'); return; }
+  const headers = ['#','วันที่','เวลา','Inspector','Shift','LINE','Main Formula','Sub Formula','Feed Code','Lot','SV','Status','บันทึกเมื่อ'];
+  const rows = svRecords.map((r,i) => {
+    const spec = SV_SPEC[r.formula];
+    const status = spec ? (r.sv >= spec.min && r.sv <= spec.max ? 'OK' : 'เกิน Spec') : '-';
+    return [i+1, r.date, r.time, r.inspector, r.shift, r.line, r.formula, r.subformula||'', r.feedcode, r.lot, r.sv, status, r.savedAt];
+  });
+  const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+  ws['!cols'] = headers.map(() => ({ wch: 14 }));
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'SV Records');
+  const d = new Date();
+  XLSX.writeFile(wb, `SV_Records_${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}.xlsx`);
+}
 function showQR() {
-  const url = window.location.href.split('#')[0] + '#form';
+  const url = 'https://mahachaiinno.github.io/qc-inspection/';
   document.getElementById('qr-url-text').textContent = url;
   const box = document.getElementById('qr-box');
   box.innerHTML = '';
