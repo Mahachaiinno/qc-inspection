@@ -328,61 +328,69 @@ tr:hover td{background:var(--bg);}
 <div class="page" id="page-dashboard">
   <div class="dash-header"><h2>📊 Dashboard</h2><button class="btn" onclick="renderDashboard()">🔄 Refresh</button></div>
   <div class="card" style="margin-bottom:16px;">
-    <div class="card-title">🔍 กรองข้อมูล <span style="font-weight:400;font-size:11px;color:var(--text3);">— เลือกได้หลายรายการ</span></div>
-    <div class="filter-group"><div class="filter-group-label">LINE</div>
-      <div class="chip-row" id="chips-line">
-        <span class="chip" data-group="line" data-val="Line 1" onclick="toggleChip(this)">Line 1</span>
-        <span class="chip" data-group="line" data-val="Line 2" onclick="toggleChip(this)">Line 2</span>
-        <span class="chip" data-group="line" data-val="Line 3" onclick="toggleChip(this)">Line 3</span>
-        <span class="chip" data-group="line" data-val="Line 4" onclick="toggleChip(this)">Line 4</span>
-        <span class="chip" data-group="line" data-val="Line 5" onclick="toggleChip(this)">Line 5</span>
-        <span class="chip" data-group="line" data-val="Line 6" onclick="toggleChip(this)">Line 6</span>
-        <span class="chip" data-group="line" data-val="Line 7" onclick="toggleChip(this)">Line 7</span>
-        <span class="chip" data-group="line" data-val="Line 8" onclick="toggleChip(this)">Line 8</span>
+    <div class="card-title">🔍 กรองข้อมูล</div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
+      <div class="field">
+        <label style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.05em;">LINE</label>
+        <select id="dd-line" onchange="renderDashboard()">
+          <option value="">ทุก LINE</option>
+          <option>Line 1</option><option>Line 2</option><option>Line 3</option><option>Line 4</option>
+          <option>Line 5</option><option>Line 6</option><option>Line 7</option><option>Line 8</option>
+        </select>
       </div>
-    </div>
-    <div class="filter-group"><div class="filter-group-label">Shift</div>
-      <div class="chip-row">
-        <span class="chip" data-group="shift" data-val="P1" onclick="toggleChip(this)">P1</span>
-        <span class="chip" data-group="shift" data-val="P2" onclick="toggleChip(this)">P2</span>
-        <span class="chip" data-group="shift" data-val="P3" onclick="toggleChip(this)">P3</span>
+      <div class="field">
+        <label style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.05em;">Shift</label>
+        <select id="dd-shift" onchange="renderDashboard()">
+          <option value="">ทุก Shift</option>
+          <option>P1</option><option>P2</option><option>P3</option>
+        </select>
       </div>
-    </div>
-    <div class="filter-group"><div class="filter-group-label">Main Formula</div>
-      <div class="chip-row">
-        <span class="chip" data-group="mainformula" data-val="701P" onclick="toggleChip(this)">701P</span>
-        <span class="chip" data-group="mainformula" data-val="901P" onclick="toggleChip(this)">901P</span>
-        <span class="chip" data-group="mainformula" data-val="POLY" onclick="toggleChip(this)">POLY</span>
-        <span class="chip" data-group="mainformula" data-val="MS3618" onclick="toggleChip(this)">MS3618</span>
-        <span class="chip" data-group="mainformula" data-val="TNT" onclick="toggleChip(this)">TNT</span>
-        <span class="chip" data-group="mainformula" data-val="NF" onclick="toggleChip(this)">NF</span>
-        <span class="chip" data-group="mainformula" data-val="Broodstock" onclick="toggleChip(this)">Broodstock</span>
-        <span class="chip" data-group="mainformula" data-val="Others" onclick="toggleChip(this)">Others</span>
+      <div class="field">
+        <label style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.05em;">Main Formula</label>
+        <select id="dd-mainformula" onchange="renderDashboard()">
+          <option value="">ทุก Formula</option>
+          <option>701P</option><option>901P</option><option>POLY</option><option>MS3618</option>
+          <option>TNT</option><option>NF</option><option>Broodstock</option><option>Others</option>
+        </select>
       </div>
-    </div>
-    <div class="filter-group"><div class="filter-group-label">Sub Formula</div>
-      <div class="chip-row">
-        <span class="chip" data-group="subformula" data-val="P" onclick="toggleChip(this)">P</span>
-        <span class="chip" data-group="subformula" data-val="S" onclick="toggleChip(this)">S</span>
-        <span class="chip" data-group="subformula" data-val="G" onclick="toggleChip(this)">G</span>
-        <span class="chip" data-group="subformula" data-val="NK" onclick="toggleChip(this)">NK</span>
-        <span class="chip" data-group="subformula" data-val="B1" onclick="toggleChip(this)">B1</span>
-        <span class="chip" data-group="subformula" data-val="B2" onclick="toggleChip(this)">B2</span>
-        <span class="chip" data-group="subformula" data-val="B3" onclick="toggleChip(this)">B3</span>
-        <span class="chip" data-group="subformula" data-val="NONE" onclick="toggleChip(this)">NONE</span>
+      <div class="field">
+        <label style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.05em;">Sub Formula</label>
+        <select id="dd-subformula" onchange="renderDashboard()">
+          <option value="">ทุก Sub Formula</option>
+          <option>P</option><option>S</option><option>G</option><option>NK</option>
+          <option>B1</option><option>B2</option><option>B3</option><option>NONE</option>
+        </select>
       </div>
-    </div>
-    <div class="filter-group"><div class="filter-group-label">Feed Code</div><div class="chip-row" id="chips-feedcode"></div></div>
-    <div class="filter-group"><div class="filter-group-label">วันที่</div>
-      <div style="display:flex;gap:8px;align-items:center;">
-        <input type="date" id="dash-date-from" onchange="renderDashboard()" style="border:1px solid var(--border);border-radius:var(--radius-sm);padding:6px 10px;font-size:13px;font-family:inherit;background:var(--surface);color:var(--text);outline:none;" />
-        <span style="font-size:12px;color:var(--text3);">ถึง</span>
-        <input type="date" id="dash-date-to" onchange="renderDashboard()" style="border:1px solid var(--border);border-radius:var(--radius-sm);padding:6px 10px;font-size:13px;font-family:inherit;background:var(--surface);color:var(--text);outline:none;" />
+      <div class="field">
+        <label style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.05em;">Feed Code</label>
+        <select id="dd-feedcode" onchange="renderDashboard()">
+          <option value="">ทุก Feed Code</option>
+        </select>
+      </div>
+      <div class="field">
+        <label style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.05em;">วันที่ (จาก)</label>
+        <input type="date" id="dash-date-from" onchange="renderDashboard()" style="border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 10px;font-size:14px;font-family:inherit;background:var(--surface);color:var(--text);outline:none;" />
+      </div>
+      <div class="field">
+        <label style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.05em;">วันที่ (ถึง)</label>
+        <input type="date" id="dash-date-to" onchange="renderDashboard()" style="border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 10px;font-size:14px;font-family:inherit;background:var(--surface);color:var(--text);outline:none;" />
       </div>
     </div>
     <div style="margin-top:12px;display:flex;gap:8px;align-items:center;">
       <button class="btn" onclick="clearDashFilters()">✕ ล้างตัวกรอง</button>
       <span id="dash-filter-label" style="font-size:12px;color:var(--text3);"></span>
+    </div>
+  </div>
+
+  <!-- PARAMETER GRAPH SELECTOR -->
+  <div class="card" style="margin-bottom:16px;">
+    <div class="card-title">📈 เลือก Parameter ที่ต้องการดูกราฟ <span style="font-weight:400;font-size:11px;color:var(--text3);">— เลือกได้หลายอัน</span></div>
+    <div class="chip-row">
+      <span class="chip active" data-param="sv"      onclick="toggleParam(this)">📊 SV</span>
+      <span class="chip active" data-param="cp"      onclick="toggleParam(this)">📊 CP</span>
+      <span class="chip active" data-param="sink"    onclick="toggleParam(this)">⏱ Sinking Time</span>
+      <span class="chip active" data-param="sizing"  onclick="toggleParam(this)">📏 % Sizing</span>
+      <span class="chip active" data-param="color"   onclick="toggleParam(this)">🎨 Color (L*a*b*)</span>
     </div>
   </div>
   <div class="stats-grid" id="stats-grid"></div>
@@ -391,13 +399,17 @@ tr:hover td{background:var(--bg);}
     <div class="table-wrap"><table><thead><tr><th>LINE</th><th>Feed Code</th><th>จำนวน</th><th>ตามรอบ</th><th>Recheck</th><th>Avg SV</th><th>Avg CP</th><th>Avg Sinking</th></tr></thead><tbody id="line-summary-body"></tbody></table></div>
   </div>
   <div class="charts-grid">
-    <div class="chart-card" style="grid-column:span 2;">
-      <div class="chart-title">% Sizing Distribution (Under / Insize / Upper)</div>
+    <div class="chart-card" id="chart-card-sizing" style="grid-column:span 2;">
+      <div class="chart-title">📏 % Sizing Distribution (Under / Insize / Upper)</div>
       <div class="chart-wrap" style="height:240px;"><canvas id="chart-sizing-pct"></canvas></div>
     </div>
-    <div class="chart-card"><div class="chart-title">Check ตาม Feed Code</div><div class="chart-wrap"><canvas id="chart-feedcode"></canvas></div></div>
-    <div class="chart-card"><div class="chart-title">แนวโน้มค่า SV</div><div class="chart-wrap"><canvas id="chart-sv"></canvas></div></div>
-    <div class="chart-card"><div class="chart-title">แนวโน้มค่า CP</div><div class="chart-wrap"><canvas id="chart-cp"></canvas></div></div>
+    <div class="chart-card" id="chart-card-feedcode"><div class="chart-title">Check ตาม Feed Code</div><div class="chart-wrap"><canvas id="chart-feedcode"></canvas></div></div>
+    <div class="chart-card" id="chart-card-sv"><div class="chart-title">📊 แนวโน้มค่า SV</div><div class="chart-wrap"><canvas id="chart-sv"></canvas></div></div>
+    <div class="chart-card" id="chart-card-cp"><div class="chart-title">📊 แนวโน้มค่า CP</div><div class="chart-wrap"><canvas id="chart-cp"></canvas></div></div>
+    <div class="chart-card" id="chart-card-sink"><div class="chart-title">⏱ แนวโน้ม Sinking Time</div><div class="chart-wrap"><canvas id="chart-sink"></canvas></div></div>
+    <div class="chart-card" id="chart-card-colorl"><div class="chart-title">🎨 แนวโน้มค่า L* (Color)</div><div class="chart-wrap"><canvas id="chart-colorl"></canvas></div></div>
+    <div class="chart-card" id="chart-card-colora"><div class="chart-title">🎨 แนวโน้มค่า a* (Color)</div><div class="chart-wrap"><canvas id="chart-colora"></canvas></div></div>
+    <div class="chart-card" id="chart-card-colorb"><div class="chart-title">🎨 แนวโน้มค่า b* (Color)</div><div class="chart-wrap"><canvas id="chart-colorb"></canvas></div></div>
   </div>
 </div>
 
@@ -582,14 +594,37 @@ async function saveRecord() {
 function getChipVals(group) { return [...document.querySelectorAll(`.chip[data-group="${group}"].active`)].map(c=>c.dataset.val); }
 function toggleChip(el) { el.classList.toggle('active'); renderDashboard(); }
 
+function populateFeedcodeDropdown() {
+  const sel = document.getElementById('dd-feedcode'); if(!sel) return;
+  const cur = sel.value;
+  const codes = [...new Set(records.map(r=>r.feedcode).filter(Boolean))].sort();
+  sel.innerHTML = '<option value="">ทุก Feed Code</option>' + codes.map(c=>`<option${c===cur?' selected':''}>${c}</option>`).join('');
+}
+
+function clearDashFilters() {
+  ['dd-line','dd-shift','dd-mainformula','dd-subformula','dd-feedcode','dash-date-from','dash-date-to'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.value='';
+  });
+  renderDashboard();
+}
+
 function getDashFiltered() {
-  const fLines=getChipVals('line'), fShifts=getChipVals('shift'), fMFs=getChipVals('mainformula');
-  const fSFs=getChipVals('subformula'), fFCs=getChipVals('feedcode');
-  const fFrom=document.getElementById('dash-date-from').value, fTo=document.getElementById('dash-date-to').value;
+  const fLine  = document.getElementById('dd-line').value;
+  const fShift = document.getElementById('dd-shift').value;
+  const fMF    = document.getElementById('dd-mainformula').value;
+  const fSF    = document.getElementById('dd-subformula').value;
+  const fFC    = document.getElementById('dd-feedcode').value;
+  const fFrom  = document.getElementById('dash-date-from').value;
+  const fTo    = document.getElementById('dash-date-to').value;
   return records.filter(r=>
-    (!fLines.length||fLines.includes(r.line))&&(!fShifts.length||fShifts.includes(r.shift))&&
-    (!fMFs.length||fMFs.includes(r.formula))&&(!fSFs.length||fSFs.includes(r.subformula))&&
-    (!fFCs.length||fFCs.includes(r.feedcode))&&(!fFrom||r.date>=fFrom)&&(!fTo||r.date<=fTo));
+    (!fLine  || r.line === fLine) &&
+    (!fShift || r.shift === fShift) &&
+    (!fMF    || r.formula === fMF) &&
+    (!fSF    || r.subformula === fSF) &&
+    (!fFC    || r.feedcode === fFC) &&
+    (!fFrom  || r.date >= fFrom) &&
+    (!fTo    || r.date <= fTo)
+  );
 }
 
 function populateFeedcodeChips() {
@@ -602,17 +637,23 @@ function populateFeedcodeChips() {
 function clearDashFilters() {
   document.querySelectorAll('.chip.active').forEach(c=>c.classList.remove('active'));
   document.getElementById('dash-date-from').value=''; document.getElementById('dash-date-to').value='';
+  ['dd-sv','dd-cp','dd-sink','dd-sizing','dd-color'].forEach(id=>document.getElementById(id).value='');
   renderDashboard();
 }
 
 function avg(arr) { const n=arr.map(v=>parseFloat(v)).filter(v=>!isNaN(v)&&v!==0); return n.length?(n.reduce((a,b)=>a+b,0)/n.length).toFixed(2):'-'; }
 
 function renderDashboard() {
-  populateFeedcodeChips();
+  populateFeedcodeDropdown();
   const data=getDashFiltered();
-  const fLines=getChipVals('line'),fShifts=getChipVals('shift'),fMFs=getChipVals('mainformula'),fSFs=getChipVals('subformula'),fFCs=getChipVals('feedcode');
+  const params=getActiveParams();
+  showHideCharts(params);
+  const fLine=document.getElementById('dd-line').value, fShift=document.getElementById('dd-shift').value;
+  const fMF=document.getElementById('dd-mainformula').value, fSF=document.getElementById('dd-subformula').value;
+  const fFC=document.getElementById('dd-feedcode').value;
   const fFrom=document.getElementById('dash-date-from').value, fTo=document.getElementById('dash-date-to').value;
-  const parts=[...fLines,...fShifts,...fMFs,...fSFs,...fFCs,fFrom,fTo].filter(Boolean);
+  const dateRange = fFrom && fTo ? fFrom+' ถึง '+fTo : fFrom || fTo;
+  const parts=[fLine,fShift,fMF,fSF,fFC,dateRange].filter(Boolean);
   document.getElementById('dash-filter-label').textContent=parts.length?'กรองโดย: '+parts.join(' | '):'แสดงข้อมูลทั้งหมด';
   const total=data.length, rounds=data.filter(r=>r.purpose==='round').length, rechecks=data.filter(r=>r.purpose==='recheck').length;
   const todayStr=new Date().toISOString().split('T')[0], todayCount=data.filter(r=>r.date===todayStr).length;
@@ -646,6 +687,10 @@ function renderDashboard() {
   const last20=[...data].reverse().slice(-20);
   drawChart('chart-sv','line',last20.map(r=>r.time||r.date),[{label:'SV',data:last20.map(r=>parseFloat(r.sv)||null),borderColor:'#378ADD',backgroundColor:'rgba(55,138,221,0.1)',tension:0.3,fill:true,pointRadius:3}]);
   drawChart('chart-cp','line',last20.map(r=>r.time||r.date),[{label:'CP',data:last20.map(r=>parseFloat(r.cp)||null),borderColor:'#534AB7',backgroundColor:'rgba(83,74,183,0.1)',tension:0.3,fill:true,pointRadius:3}]);
+  drawChart('chart-sink','line',last20.map(r=>r.time||r.date),[{label:'Sinking Time',data:last20.map(r=>parseFloat(r.sinktime)||null),borderColor:'#BA7517',backgroundColor:'rgba(186,117,23,0.1)',tension:0.3,fill:true,pointRadius:3}]);
+  drawChart('chart-colorl','line',last20.map(r=>r.time||r.date),[{label:'L*',data:last20.map(r=>parseFloat(r.colorL)||null),borderColor:'#555',backgroundColor:'rgba(85,85,85,0.1)',tension:0.3,fill:true,pointRadius:3}]);
+  drawChart('chart-colora','line',last20.map(r=>r.time||r.date),[{label:'a*',data:last20.map(r=>parseFloat(r.colorA)||null),borderColor:'#C0392B',backgroundColor:'rgba(192,57,43,0.1)',tension:0.3,fill:true,pointRadius:3}]);
+  drawChart('chart-colorb','line',last20.map(r=>r.time||r.date),[{label:'b*',data:last20.map(r=>parseFloat(r.colorB)||null),borderColor:'#2471A3',backgroundColor:'rgba(36,113,163,0.1)',tension:0.3,fill:true,pointRadius:3}]);
 }
 
 function drawChart(id,type,labels,datasets,extraOpts={}) {
