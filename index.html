@@ -295,7 +295,21 @@ tr:hover td{background:var(--bg);}
     </div>
     <div class="divider"></div>
     <div class="sizing-group">
-      <div class="sizing-group-label">🎨 15. Colors (CIE L*a*b*)</div>
+      <div class="sizing-group-label">🎨 15. Colors (CIE L*a*b*) & %M</div>
+      <div class="grid-2" style="margin-bottom:10px;">
+        <div class="field">
+          <label style="font-size:11px;font-weight:500;color:var(--text2);">Method</label>
+          <select id="f-color-method">
+            <option value="">-- Select Method --</option>
+            <option>IR</option>
+            <option>เครื่องวัดสี</option>
+          </select>
+        </div>
+        <div class="field">
+          <label style="font-size:11px;font-weight:500;color:var(--purple);">%M</label>
+          <input type="number" id="f-color-m" placeholder="0.00" step="0.01" />
+        </div>
+      </div>
       <div class="sizing-row">
         <div class="sizing-field">
           <div class="sf-label" style="color:#555;">L* (ความสว่าง)</div>
@@ -437,7 +451,7 @@ tr:hover td{background:var(--bg);}
           <th>SV</th><th>CP</th><th>Sinking</th>
           <th>Diameter</th><th>Under%</th><th>Insize%</th><th>Upper%</th>
           <th>Min Len</th><th>Max Len</th><th>SD Len</th>
-          <th>L*</th><th>a*</th><th>b*</th>
+          <th>L*</th><th>a*</th><th>b*</th><th>%M</th><th>Method</th>
           <th>บันทึกเมื่อ</th><th></th>
         </tr></thead>
         <tbody id="table-body"></tbody>
@@ -569,6 +583,7 @@ async function saveRecord() {
     diameter:g('f-diameter'), under:g('f-under'), insize:g('f-insize'), upper:g('f-upper'),
     minlen:g('f-minlen'), maxlen:g('f-maxlen'), sdlen:g('f-sdlen'),
     colorL:g('f-color-l'), colorA:g('f-color-a'), colorB:g('f-color-b'),
+    colorM:g('f-color-m'), colorMethod:g('f-color-method'),
     savedAt:tsStr
   };
   records.unshift(rec);
@@ -715,7 +730,7 @@ function renderTable() {
     <td>${r.sv}</td><td>${r.cp}</td><td>${r.sinktime}</td>
     <td>${r.diameter||''}</td><td>${r.under}</td><td>${r.insize}</td><td>${r.upper}</td>
     <td>${r.minlen}</td><td>${r.maxlen}</td><td>${r.sdlen}</td>
-    <td>${r.colorL||''}</td><td>${r.colorA||''}</td><td>${r.colorB||''}</td>
+    <td>${r.colorL||''}</td><td>${r.colorA||''}</td><td>${r.colorB||''}</td><td>${r.colorM||''}</td><td>${r.colorMethod||''}</td>
     <td style="font-size:11px;color:var(--text3);">${r.savedAt}</td>
     <td><button class="del-btn" onclick="deleteRecord(${r.id})">🗑</button></td>
   </tr>`).join('');
@@ -726,8 +741,8 @@ function clearFilters(){ ['filter-shift','filter-line','filter-purpose','filter-
 // ===== EXPORT EXCEL =====
 function exportExcel() {
   if(!records.length){ alert('ไม่มีข้อมูลสำหรับ Export'); return; }
-  const headers=['#','วันที่','เวลา','Inspector','Shift','Check','Sampling','LINE','Lot','Feed Code','Die Size','Main Formula','Sub Formula','SV','CP','Sinking Time','Diameter(mm.)','Under%','Insize%','Upper%','Min Length','Max Length','SD Length','L*','a*','b*','บันทึกเมื่อ'];
-  const rows=records.map((r,i)=>[i+1,r.date,r.time,r.inspector,r.shift,r.purpose==='round'?'ตามรอบ':'Recheck',r.sampling,r.line,r.lot,r.feedcode,r.diesize,r.formula||'',r.subformula||'',r.sv,r.cp,r.sinktime,r.diameter||'',r.under,r.insize,r.upper,r.minlen,r.maxlen,r.sdlen,r.colorL||'',r.colorA||'',r.colorB||'',r.savedAt]);
+  const headers=['#','วันที่','เวลา','Inspector','Shift','Check','Sampling','LINE','Lot','Feed Code','Die Size','Main Formula','Sub Formula','SV','CP','Sinking Time','Diameter(mm.)','Under%','Insize%','Upper%','Min Length','Max Length','SD Length','Method','L*','a*','b*','%M','บันทึกเมื่อ'];
+  const rows=records.map((r,i)=>[i+1,r.date,r.time,r.inspector,r.shift,r.purpose==='round'?'ตามรอบ':'Recheck',r.sampling,r.line,r.lot,r.feedcode,r.diesize,r.formula||'',r.subformula||'',r.sv,r.cp,r.sinktime,r.diameter||'',r.under,r.insize,r.upper,r.minlen,r.maxlen,r.sdlen,r.colorMethod||'',r.colorL||'',r.colorA||'',r.colorB||'',r.colorM||'',r.savedAt]);
   const ws=XLSX.utils.aoa_to_sheet([headers,...rows]); ws['!cols']=headers.map(()=>({wch:14}));
   const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'QC Inspection');
   const sumRows=[['QC Inspection Summary'],[''],['รายการทั้งหมด',records.length],['ตามรอบ',records.filter(r=>r.purpose==='round').length],['Recheck',records.filter(r=>r.purpose==='recheck').length],['Export เมื่อ',new Date().toLocaleString('th-TH')]];
