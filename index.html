@@ -1,589 +1,1759 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>บันทึกข้อมูล SV – Quality Inspection</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>QC Inspection System</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
-:root{
-  --blue:#1F4E79;--blue-light:#E6F1FB;--blue-mid:#BDD7EE;
-  --green:#375623;--green-light:#E2EFDA;
-  --orange:#C55A11;--orange-light:#FCE4D6;
-  --purple:#7030A0;--purple-light:#EAE0F0;
-  --gold:#7F6000;--gold-light:#FFF2CC;
-  --bg:#F4F6F9;--surface:#fff;--border:#DDE3EC;
-  --text:#1A2233;--text-sec:#5A6478;--text-ter:#9AA3B2;
-  --radius:10px;--shadow:0 2px 12px rgba(31,78,121,.08);
+:root {
+  --green:#1D9E75;--green-dark:#0F6E56;--green-light:#E1F5EE;
+  --red:#D85A30;--red-light:#FAECE7;--red-dark:#993C1D;
+  --blue:#378ADD;--blue-light:#E6F1FB;--blue-dark:#185FA5;
+  --purple:#534AB7;--purple-light:#EEEDFE;
+  --amber:#BA7517;--amber-light:#FAEEDA;
+  --bg:#F8F8F6;--surface:#FFFFFF;--border:rgba(0,0,0,0.1);
+  --text:#1a1a18;--text2:#5F5E5A;--text3:#888780;
+  --radius:10px;--radius-sm:6px;--shadow:0 1px 3px rgba(0,0,0,0.08);
 }
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5}
-/* Topbar */
-.topbar{background:var(--blue);color:#fff;padding:0 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;min-height:52px;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.18)}
-.topbar-title{font-size:15px;font-weight:700;display:flex;align-items:center;gap:8px;letter-spacing:.3px}
-.topbar-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:8px 0}
-.tab-btn{background:transparent;border:none;color:rgba(255,255,255,.65);padding:6px 11px;border-radius:7px;cursor:pointer;font-size:12px;font-weight:600;font-family:'Sarabun',sans-serif;transition:all .15s;display:flex;align-items:center;gap:4px;letter-spacing:.2px}
-.tab-btn.active{background:rgba(255,255,255,.18);color:#fff}
-.tab-btn:hover:not(.active){background:rgba(255,255,255,.1);color:#fff}
-.sync-btn{display:flex;align-items:center;gap:5px;padding:6px 13px;border-radius:7px;border:1.5px solid rgba(255,255,255,.35);background:transparent;color:#fff;font-size:12px;font-weight:600;font-family:'Sarabun',sans-serif;cursor:pointer;transition:all .15s}
-.sync-btn:hover{background:rgba(255,255,255,.15)}
-.sync-btn:disabled{opacity:.45;pointer-events:none}
-.conn-pill{display:flex;align-items:center;gap:6px;padding:5px 11px;border-radius:20px;font-size:11px;font-weight:600;background:rgba(255,255,255,.1);color:rgba(255,255,255,.85)}
-.dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
-.dot-ok{background:#4ade80}.dot-err{background:#f87171}.dot-spin{background:#facc15;animation:blink 1s infinite}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
-/* Layout */
-.page{display:none;padding:18px;max-width:1280px;margin:0 auto}
-.page.active{display:block}
-.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 20px;margin-bottom:14px;box-shadow:var(--shadow)}
-/* KPI */
-.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px;margin-bottom:14px}
-.kpi{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:13px 15px;box-shadow:var(--shadow)}
-.kpi-label{font-size:11px;color:var(--text-sec);font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
-.kpi-val{font-size:26px;font-weight:700;font-family:'IBM Plex Mono',monospace}
-.kpi-val.blue{color:var(--blue)}.kpi-val.pass{color:var(--green)}.kpi-val.fail{color:var(--orange)}.kpi-val.hold{color:var(--gold)}.kpi-val.pct{color:var(--purple)}
-/* Form */
-.form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px}
-.field{display:flex;flex-direction:column;gap:5px}
-.field label{font-size:11px;color:var(--text-sec);font-weight:700;text-transform:uppercase;letter-spacing:.4px}
-.field input,.field select,.field textarea{width:100%;padding:8px 11px;border:1.5px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text);font-size:13px;font-family:'Sarabun',sans-serif;transition:border-color .15s}
-.field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(31,78,121,.1)}
-.field textarea{resize:vertical;min-height:50px}
-.field.full{grid-column:1/-1}
-.section-hdr{font-size:11px;font-weight:700;color:var(--blue);margin:0 0 12px;padding-bottom:7px;border-bottom:2px solid var(--blue-light);display:flex;align-items:center;gap:6px;text-transform:uppercase;letter-spacing:.5px}
-/* Buttons */
-.btn-row{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
-.btn{padding:8px 18px;border-radius:8px;border:1.5px solid var(--border);background:transparent;cursor:pointer;font-size:13px;font-weight:600;font-family:'Sarabun',sans-serif;color:var(--text);transition:all .15s;display:inline-flex;align-items:center;gap:6px}
-.btn:hover{background:var(--bg)}
-.btn.primary{background:var(--blue);color:#fff;border-color:var(--blue)}
-.btn.primary:hover{background:#163a5e}
-.btn.primary:disabled{opacity:.45;pointer-events:none}
-.btn.success{background:var(--green);color:#fff;border-color:var(--green)}
-.btn.success:hover{background:#2a4019}
-.btn.sm{padding:4px 10px;font-size:11px}
-.btn.danger{border-color:#fca5a5;color:var(--orange)}
-.btn.danger:hover{background:var(--orange-light)}
-/* Badge */
-.badge{display:inline-block;padding:3px 9px;border-radius:5px;font-size:11px;font-weight:700;letter-spacing:.3px}
-.badge.pass{background:var(--green-light);color:var(--green)}
-.badge.fail{background:var(--orange-light);color:var(--orange)}
-.badge.hold{background:var(--gold-light);color:var(--gold)}
-/* Check buttons */
-.check-group{display:flex;gap:8px;flex-wrap:wrap}
-.check-opt{flex:1;min-width:85px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;padding:11px 8px;border:2px solid var(--border);border-radius:10px;cursor:pointer;background:var(--surface);transition:all .15s;font-size:12px;font-weight:600;color:var(--text-sec);font-family:'Sarabun',sans-serif}
-.check-opt:hover{border-color:var(--blue-mid);background:var(--blue-light)}
-.check-opt.sel-ck{border-color:var(--blue);background:var(--blue-light);color:var(--blue)}
-.check-opt.sel-rc{border-color:var(--purple);background:var(--purple-light);color:var(--purple)}
-.check-opt.sel-none{border:2px dashed var(--border);background:var(--bg);color:var(--text-ter)}
-/* Prod table */
-.prod-wrap{overflow-x:auto;margin-bottom:4px}
-.prod-table{width:100%;border-collapse:collapse;font-size:12px;min-width:720px}
-.prod-table th{padding:8px 10px;text-align:center;font-weight:700;font-size:10px;color:#fff;border:1px solid rgba(255,255,255,.2);letter-spacing:.4px;text-transform:uppercase}
-.th-b{background:var(--blue)}.th-g{background:var(--green)}
-.prod-table td{padding:4px 5px;border:1px solid var(--border)}
-.prod-table td select,.prod-table td input{width:100%;padding:5px 6px;border:none;border-radius:5px;background:var(--bg);color:var(--text);font-size:12px;font-family:'Sarabun',sans-serif;transition:background .1s}
-.prod-table td select:focus,.prod-table td input:focus{outline:1.5px solid var(--blue);background:#fff}
-.prod-table tbody tr:nth-child(even) td{background:#F8FAFC}
-.prod-table tbody tr:nth-child(odd) td{background:#fff}
-.spec-td{text-align:center;font-size:11px;font-family:'IBM Plex Mono',monospace;color:var(--text-sec);background:#F8FAFC!important}
-.res-pass{background:var(--green-light)!important;color:var(--green);font-weight:700;text-align:center;font-family:'IBM Plex Mono',monospace}
-.res-fail{background:var(--orange-light)!important;color:var(--orange);font-weight:700;text-align:center;font-family:'IBM Plex Mono',monospace}
-.res-blank{text-align:center;color:var(--text-ter)}
-.del-row-btn{padding:3px 7px;border:none;background:transparent;cursor:pointer;color:var(--text-ter);font-size:13px;border-radius:5px;transition:all .15s}
-.del-row-btn:hover{color:var(--orange);background:var(--orange-light)}
-.add-row-btn{display:inline-flex;align-items:center;gap:6px;padding:6px 13px;border:2px dashed var(--border);border-radius:8px;background:transparent;cursor:pointer;font-size:12px;font-weight:600;font-family:'Sarabun',sans-serif;color:var(--text-sec);margin-top:8px;transition:all .15s}
-.add-row-btn:hover{border-color:var(--blue);color:var(--blue);background:var(--blue-light)}
-/* Rec table */
-.rec-table{width:100%;border-collapse:collapse;font-size:12px}
-.rec-table th{padding:8px 10px;text-align:left;font-weight:700;font-size:10px;color:var(--text-sec);border-bottom:2px solid var(--border);background:#F8FAFC;white-space:nowrap;text-transform:uppercase;letter-spacing:.4px}
-.rec-table td{padding:7px 10px;border-bottom:1px solid var(--border);vertical-align:middle}
-.rec-table tr:last-child td{border-bottom:none}
-.rec-table tr:hover td{background:#F8FAFC}
-.shift-p1{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;background:var(--blue-light);color:var(--blue)}
-.shift-p2{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;background:var(--gold-light);color:var(--gold)}
-.shift-p3{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;background:var(--purple-light);color:var(--purple)}
-.ck-ck{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:700;background:var(--blue-light);color:var(--blue)}
-.ck-rc{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:700;background:var(--purple-light);color:var(--purple)}
-/* Sampling dropdown */
-.samp-dd{position:relative}
-.samp-trigger{width:100%;padding:8px 11px;border:1.5px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text);font-size:13px;font-family:'Sarabun',sans-serif;cursor:pointer;text-align:left;display:flex;align-items:center;justify-content:space-between;transition:border-color .15s}
-.samp-trigger:hover{border-color:var(--blue)}
-.samp-trigger.has-val{border-color:var(--blue);color:var(--blue);background:var(--blue-light);font-weight:600}
-.samp-panel{position:absolute;top:calc(100% + 4px);left:0;right:0;background:#fff;border:1.5px solid var(--border);border-radius:10px;box-shadow:0 8px 24px rgba(31,78,121,.14);z-index:500;max-height:240px;overflow-y:auto;display:none}
-.samp-panel.open{display:block}
-.samp-opt{display:flex;align-items:center;gap:8px;padding:8px 12px;cursor:pointer;transition:background .1s}
-.samp-opt:hover,.samp-opt.selected{background:var(--blue-light)}
-.samp-opt.selected{color:var(--blue);font-weight:600}
-.samp-num{font-size:10px;color:var(--text-ter);min-width:18px;font-family:'IBM Plex Mono',monospace;font-weight:600}
-.samp-opt.selected .samp-num{color:var(--blue)}
-/* SPEC */
-.spec-mgr{width:100%;border-collapse:collapse;font-size:13px}
-.spec-mgr th{padding:9px 12px;background:var(--blue);color:#fff;font-weight:700;font-size:11px;text-align:left;text-transform:uppercase;letter-spacing:.4px}
-.spec-mgr td{padding:8px 11px;border-bottom:1px solid var(--border)}
-.spec-mgr tr:last-child td{border-bottom:none}
-.spec-mgr tr:hover td{background:#F8FAFC}
-.sinput{padding:6px 9px;border:1.5px solid var(--border);border-radius:7px;background:#fff;color:var(--text);font-size:12px;font-family:'IBM Plex Mono',monospace;width:80px;text-align:center;transition:border-color .15s}
-.sinput:focus{outline:none;border-color:var(--blue)}
-/* Dashboard bars */
-.result-row{display:flex;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);gap:9px}
-.result-row:last-child{border:none}
-.bar-wrap{height:7px;background:var(--bg);border-radius:4px;overflow:hidden;flex:1}
-.bar-fill{height:100%;border-radius:4px;background:var(--green)}
-.trend{display:flex;gap:5px;flex-wrap:wrap}
-.trend-dot{width:11px;height:11px;border-radius:50%;flex-shrink:0;cursor:default;transition:transform .1s}
-.trend-dot:hover{transform:scale(1.4)}
-/* Toast */
-.toast{position:fixed;bottom:18px;right:18px;color:#fff;padding:10px 16px;border-radius:9px;font-size:13px;font-weight:600;font-family:'Sarabun',sans-serif;opacity:0;transition:opacity .25s;pointer-events:none;z-index:9999;display:flex;align-items:center;gap:7px;max-width:320px;box-shadow:0 4px 20px rgba(0,0,0,.2)}
-.toast.show{opacity:1}
-.toast.ok{background:var(--green)}.toast.err{background:var(--orange)}.toast.info{background:var(--blue)}
-/* Search row */
-.search-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px}
-.search-title{font-size:13px;font-weight:700;color:var(--text-sec)}
-.search-controls{display:flex;gap:7px;flex-wrap:wrap}
-.search-input{font-size:12px;padding:7px 11px;border:1.5px solid var(--border);border-radius:8px;background:#fff;color:var(--text);font-family:'Sarabun',sans-serif;width:175px;transition:border-color .15s}
-.search-input:focus{outline:none;border-color:var(--blue)}
-.filter-sel{font-size:12px;padding:7px 11px;border:1.5px solid var(--border);border-radius:8px;background:#fff;color:var(--text);font-family:'Sarabun',sans-serif;cursor:pointer}
-.empty{text-align:center;padding:32px;color:var(--text-ter);font-size:13px}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;}
+.nav{background:var(--surface);border-bottom:1px solid var(--border);padding:0 12px;display:flex;align-items:center;position:sticky;top:0;z-index:100;box-shadow:var(--shadow);flex-wrap:wrap;}
+.nav-brand{font-size:14px;font-weight:600;color:var(--green-dark);padding:12px 0;margin-right:12px;display:flex;align-items:center;gap:6px;}
+.nav-brand span{background:var(--green);color:#fff;font-size:10px;padding:2px 6px;border-radius:20px;font-weight:500;}
+.nav-tab{padding:12px 10px;font-size:12px;font-weight:500;color:var(--text2);cursor:pointer;border-bottom:2px solid transparent;transition:all 0.15s;background:none;border-top:none;border-left:none;border-right:none;white-space:nowrap;}
+.nav-tab:hover{color:var(--text);}
+.nav-tab.active{color:var(--green-dark);border-bottom-color:var(--green);}
+.nav-actions{margin-left:auto;display:flex;gap:6px;align-items:center;}
+.btn{padding:6px 12px;border-radius:var(--radius-sm);font-size:12px;font-weight:500;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--text);transition:all 0.15s;font-family:inherit;}
+.btn:hover{background:var(--bg);}
+.btn-primary{background:var(--green);color:#fff;border-color:var(--green);}
+.btn-primary:hover{background:var(--green-dark);}
+.btn-excel{background:#217346;color:#fff;border-color:#217346;}
+.btn-excel:hover{background:#1a5c38;}
+.btn-danger{background:var(--red);color:#fff;border-color:var(--red);}
+.btn-danger:hover{background:var(--red-dark);}
+.page{display:none;padding:16px;max-width:900px;margin:0 auto;}
+.page.active{display:block;}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:12px;box-shadow:var(--shadow);}
+.card-title{font-size:12px;font-weight:600;color:var(--text3);letter-spacing:0.07em;text-transform:uppercase;margin-bottom:12px;}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+.grid-4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;}
+.field{display:flex;flex-direction:column;gap:5px;}
+.field label{font-size:12px;color:var(--text2);font-weight:500;}
+.field input,.field select{border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px;font-size:16px;font-family:inherit;background:var(--surface);color:var(--text);outline:none;transition:border-color 0.15s;width:100%;}
+.field input:focus,.field select:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(29,158,117,0.1);}
+.purpose-row{display:flex;gap:10px;}
+.purpose-btn{flex:1;padding:14px 8px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:14px;font-weight:500;background:var(--surface);color:var(--text2);cursor:pointer;transition:all 0.15s;text-align:center;font-family:inherit;}
+.purpose-btn:hover{background:var(--bg);}
+.purpose-btn.active-round{background:var(--green-light);color:var(--green-dark);border-color:var(--green);}
+.purpose-btn.active-recheck{background:var(--red-light);color:var(--red-dark);border-color:var(--red);}
+.sizing-group{margin-bottom:12px;}
+.sizing-group-label{font-size:11px;font-weight:600;color:var(--text3);letter-spacing:0.05em;text-transform:uppercase;margin-bottom:8px;}
+.sizing-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
+.sizing-field{display:flex;flex-direction:column;gap:4px;}
+.sizing-field .sf-label{font-size:11px;font-weight:500;}
+.sizing-field input{border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px;font-size:16px;font-family:'Courier New',monospace;background:var(--surface);color:var(--text);outline:none;width:100%;}
+.sizing-field input:focus{border-color:var(--green);}
+.sf-under{color:var(--red-dark);}.sf-insize{color:var(--green-dark);}.sf-upper{color:var(--blue-dark);}
+.sf-minlen{color:#3B6D11;}.sf-maxlen{color:var(--amber);}.sf-sdlen{color:var(--purple);}
+.divider{border:none;border-top:1px solid var(--border);margin:4px 0 14px;}
+.ts-bar{display:flex;align-items:center;gap:10px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;margin:16px 0 0;}
+.ts-bar .ts-label{font-size:12px;color:var(--text2);}
+.ts-bar .ts-val{font-size:13px;font-weight:600;color:var(--text);font-family:monospace;margin-left:auto;}
+.ts-val.saved{color:var(--green-dark);}
+.submit-btn{width:100%;margin-top:12px;padding:16px;background:var(--green);color:#fff;border:none;border-radius:var(--radius-sm);font-size:16px;font-weight:600;cursor:pointer;transition:background 0.15s;font-family:inherit;}
+.submit-btn:hover{background:var(--green-dark);}
+.success-toast{display:none;background:var(--green-light);border:1px solid var(--green);color:var(--green-dark);border-radius:var(--radius-sm);padding:10px 14px;margin-top:10px;font-size:13px;font-weight:500;text-align:center;}
+.dash-header{display:flex;align-items:center;gap:12px;margin-bottom:20px;}
+.dash-header h2{font-size:18px;font-weight:600;}
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);}
+.stat-label{font-size:11px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px;}
+.stat-value{font-size:28px;font-weight:700;color:var(--text);line-height:1;}
+.stat-sub{font-size:12px;color:var(--text2);margin-top:4px;}
+.stat-card.green .stat-value{color:var(--green-dark);}
+.stat-card.red .stat-value{color:var(--red-dark);}
+.stat-card.blue .stat-value{color:var(--blue-dark);}
+.charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;}
+
+/* ===== MOBILE RESPONSIVE ===== */
+@media (max-width: 600px) {
+  .nav { padding: 0 8px; overflow-x: auto; flex-wrap: nowrap; }
+  .nav-brand { font-size: 13px; margin-right: 8px; padding: 10px 0; }
+  .nav-tab { padding: 10px 8px; font-size: 11px; }
+  .page { padding: 10px; }
+  .card { padding: 12px; }
+  .grid-2 { grid-template-columns: 1fr; }
+  .grid-3 { grid-template-columns: 1fr; }
+  .grid-4 { grid-template-columns: 1fr 1fr; }
+  .sizing-row { grid-template-columns: 1fr 1fr; }
+  .stats-grid { grid-template-columns: 1fr 1fr; }
+  .charts-grid { grid-template-columns: 1fr; }
+  .field input, .field select { font-size: 16px; padding: 12px 10px; }
+  .sizing-field input { font-size: 16px; padding: 12px 10px; }
+  .submit-btn { padding: 18px; font-size: 16px; }
+  .purpose-btn { padding: 16px 6px; font-size: 14px; }
+  .modal { width: 95vw !important; padding: 16px; }
+  .btn-excel span, .nav-brand span { display: none; }
+  .ts-bar { flex-direction: column; align-items: flex-start; gap: 4px; }
+  .ts-bar .ts-val { margin-left: 0; }
+  .table-wrap { font-size: 11px; }
+  th, td { padding: 8px 8px; }
+}
+.chart-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);}
+.chart-title{font-size:13px;font-weight:600;color:var(--text2);margin-bottom:14px;}
+.chart-wrap{position:relative;height:200px;}
+.table-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;}
+.table-header{display:flex;align-items:center;padding:14px 16px;border-bottom:1px solid var(--border);gap:10px;}
+.table-header h3{font-size:14px;font-weight:600;}
+.table-header .count{font-size:12px;color:var(--text3);background:var(--bg);padding:2px 8px;border-radius:20px;}
+.table-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:12px;}
+th{background:var(--bg);padding:10px 12px;text-align:left;font-weight:600;color:var(--text2);white-space:nowrap;border-bottom:1px solid var(--border);font-size:11px;text-transform:uppercase;letter-spacing:0.04em;}
+td{padding:10px 12px;border-bottom:1px solid rgba(0,0,0,0.05);white-space:nowrap;color:var(--text);}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:var(--bg);}
+.badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;}
+.badge-round{background:var(--green-light);color:var(--green-dark);}
+.badge-recheck{background:var(--red-light);color:var(--red-dark);}
+.empty-state{text-align:center;padding:40px;color:var(--text3);}
+.empty-state .icon{font-size:32px;margin-bottom:8px;}
+.del-btn{background:none;border:none;color:var(--text3);cursor:pointer;padding:4px 6px;border-radius:4px;font-size:13px;}
+.del-btn:hover{background:var(--red-light);color:var(--red-dark);}
+.filter-bar{display:flex;gap:8px;padding:12px 16px;border-bottom:1px solid var(--border);flex-wrap:wrap;}
+.filter-bar select,.filter-bar input{border:1px solid var(--border);border-radius:var(--radius-sm);padding:6px 10px;font-size:12px;font-family:inherit;background:var(--surface);color:var(--text);outline:none;}
+.filter-bar select:focus,.filter-bar input:focus{border-color:var(--green);}
+.filter-group{margin-bottom:12px;}
+.filter-group-label{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px;}
+.chip-row{display:flex;flex-wrap:wrap;gap:6px;}
+.chip{display:inline-block;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:500;border:1px solid var(--border);background:var(--bg);color:var(--text2);cursor:pointer;transition:all 0.15s;user-select:none;}
+.chip:hover{background:var(--green-light);color:var(--green-dark);border-color:var(--green);}
+.chip.active{background:var(--green);color:#fff;border-color:var(--green-dark);}
+.auth-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px;}
+.inspector-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);position:relative;}
+.inspector-card.inactive{opacity:0.55;}
+.insp-avatar{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:#fff;margin-bottom:10px;}
+.insp-name{font-size:15px;font-weight:600;color:var(--text);margin-bottom:2px;}
+.insp-role{font-size:12px;color:var(--text3);margin-bottom:10px;}
+.insp-perms{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:12px;}
+.perm-tag{font-size:11px;padding:2px 8px;border-radius:20px;font-weight:500;}
+.perm-form{background:var(--green-light);color:var(--green-dark);}
+.perm-dash{background:var(--blue-light);color:var(--blue-dark);}
+.perm-export{background:var(--amber-light);color:var(--amber);}
+.perm-admin{background:var(--purple-light);color:var(--purple);}
+.insp-status{display:flex;align-items:center;justify-content:space-between;padding-top:10px;border-top:1px solid var(--border);}
+.status-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:5px;}
+.status-dot.on{background:var(--green);}
+.status-dot.off{background:var(--text3);}
+.toggle-btn{padding:4px 12px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;border:1px solid var(--border);background:var(--bg);color:var(--text2);transition:all 0.15s;font-family:inherit;}
+.toggle-btn:hover{background:var(--green-light);color:var(--green-dark);border-color:var(--green);}
+.edit-btn{position:absolute;top:12px;right:12px;background:none;border:none;color:var(--text3);cursor:pointer;font-size:14px;padding:4px 6px;border-radius:4px;}
+.edit-btn:hover{background:var(--bg);color:var(--text);}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.35);z-index:200;align-items:center;justify-content:center;}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--surface);border-radius:var(--radius);padding:24px;width:420px;box-shadow:0 8px 32px rgba(0,0,0,0.15);}
+.modal h3{font-size:16px;font-weight:600;margin-bottom:16px;}
+.modal .field{margin-bottom:12px;}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:16px;}
+.perm-checks{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.perm-check{display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;}
+.perm-check input{width:16px;height:16px;accent-color:var(--green);cursor:pointer;}
+.auth-header{display:flex;align-items:center;gap:12px;margin-bottom:20px;}
+.auth-header h2{font-size:18px;font-weight:600;}
 </style>
 </head>
 <body>
 
-<div class="topbar">
-  <div class="topbar-title">
-    <i class="ti ti-clipboard-check"></i> บันทึกข้อมูล SV
+<nav class="nav">
+  <div class="nav-brand">🔬 QC Inspection <span>System</span></div>
+  <button class="nav-tab active" onclick="showPage('home',this)">🏠 หน้าหลัก</button>
+  <button class="nav-tab" onclick="showPage('form',this)">📋 บันทึกข้อมูล</button>
+  <button class="nav-tab" onclick="showPage('dashboard',this)">📊 Dashboard</button>
+  <button class="nav-tab" onclick="showPage('records',this)">📁 ข้อมูลทั้งหมด</button>
+  <button class="nav-tab" onclick="showPage('sv-entry',this)">⚗️ SV</button>
+  <button class="nav-tab" onclick="showPage('control',this)">⚙️ Control</button>
+  <button class="nav-tab" onclick="showPage('spec',this)">📐 SPEC</button>
+  <div class="nav-actions">
+    <button class="btn btn-excel" onclick="exportExcel()">⬇ Export Excel</button>
   </div>
-  <div class="topbar-right">
-    <div class="conn-pill"><span class="dot dot-spin" id="cdot"></span><span id="ctxt">กำลังเชื่อมต่อ...</span></div>
-    <button class="sync-btn" id="syncbtn" onclick="syncAll()" disabled>
-      <i class="ti ti-refresh"></i> Sync
-    </button>
-    <button class="tab-btn active" onclick="showPage('form',this)"><i class="ti ti-plus"></i> บันทึก</button>
-    <button class="tab-btn" onclick="showPage('records',this)"><i class="ti ti-list"></i> รายการ</button>
-    <button class="tab-btn" onclick="showPage('spec',this)"><i class="ti ti-ruler"></i> SPEC</button>
+</nav>
+
+<!-- EDIT INSPECTOR MODAL -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal">
+    <h3 id="modal-title">แก้ไข Inspector</h3>
+    <input type="hidden" id="modal-id" />
+    <div class="field"><label>ชื่อ-นามสกุล</label><input type="text" id="modal-name" placeholder="เช่น สมชาย ใจดี" /></div>
+    <div class="field"><label>รหัสพนักงาน</label><input type="text" id="modal-empid" placeholder="เช่น EMP001" /></div>
+    <div class="field"><label>ตำแหน่ง / Role</label><input type="text" id="modal-role" placeholder="เช่น QC Inspector" /></div>
+    <div class="field">
+      <label>สิทธิ์การเข้าถึง</label>
+      <div class="perm-checks">
+        <label class="perm-check"><input type="checkbox" id="perm-form" /> 📋 บันทึกข้อมูล</label>
+        <label class="perm-check"><input type="checkbox" id="perm-dash" /> 📊 Dashboard</label>
+        <label class="perm-check"><input type="checkbox" id="perm-export" /> ⬇ Export Excel</label>
+        <label class="perm-check"><input type="checkbox" id="perm-admin" /> ⚙️ Admin</label>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal()">ยกเลิก</button>
+      <button class="btn btn-danger" id="modal-del-btn" onclick="deleteInspector()">ลบ</button>
+      <button class="btn btn-primary" onclick="saveInspector()">บันทึก</button>
+    </div>
   </div>
 </div>
 
-<!-- ═══ PAGE: FORM ═══ -->
-<div id="page-form" class="page active">
+<!-- HOME PAGE -->
+<div class="page active" id="page-home">
+  <div style="max-width:480px;margin:0 auto;padding:24px 16px;">
+    <div style="text-align:center;margin-bottom:28px;">
+      <div style="width:64px;height:64px;border-radius:16px;background:#1D9E75;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;box-shadow:0 4px 16px rgba(29,158,117,0.25);">
+        <i class="ti ti-microscope" aria-hidden="true" style="font-size:28px;color:#fff;"></i>
+      </div>
+      <h1 style="font-size:20px;font-weight:600;color:var(--text);margin:0 0 4px;">QC Inspection</h1>
+      <p style="font-size:13px;color:var(--text2);margin:0;">เลือกประเภทการบันทึกข้อมูล</p>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:12px;">
+
+      <button onclick="selectFormType('quality')" style="width:100%;padding:0;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);cursor:pointer;text-align:left;transition:all 0.18s;font-family:inherit;overflow:hidden;" onmouseover="this.style.borderColor='#1D9E75';this.style.boxShadow='0 2px 12px rgba(29,158,117,0.12)'" onmouseout="this.style.borderColor='var(--border)';this.style.boxShadow='none'">
+        <div style="display:flex;align-items:center;">
+          <div style="width:56px;min-height:80px;background:#E1F5EE;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <i class="ti ti-flask" aria-hidden="true" style="font-size:24px;color:#0F6E56;"></i>
+          </div>
+          <div style="padding:14px 16px;">
+            <div style="font-size:15px;font-weight:600;color:var(--text);margin-bottom:3px;">%M, CP, L*</div>
+            <div style="font-size:12px;color:var(--text2);line-height:1.4;">%M · CP · FAT · Fiber · Bulk NIR · Color L*a*b*</div>
+          </div>
+          <i class="ti ti-chevron-right" aria-hidden="true" style="font-size:16px;color:var(--text3);margin-left:auto;margin-right:14px;"></i>
+        </div>
+      </button>
+
+      <button onclick="selectFormType('sizing')" style="width:100%;padding:0;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);cursor:pointer;text-align:left;transition:all 0.18s;font-family:inherit;overflow:hidden;" onmouseover="this.style.borderColor='#378ADD';this.style.boxShadow='0 2px 12px rgba(55,138,221,0.12)'" onmouseout="this.style.borderColor='var(--border)';this.style.boxShadow='none'">
+        <div style="display:flex;align-items:center;">
+          <div style="width:56px;min-height:80px;background:#E6F1FB;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <i class="ti ti-ruler-2" aria-hidden="true" style="font-size:24px;color:#185FA5;"></i>
+          </div>
+          <div style="padding:14px 16px;">
+            <div style="font-size:15px;font-weight:600;color:var(--text);margin-bottom:3px;">Sizing & Bulk Density</div>
+            <div style="font-size:12px;color:var(--text2);line-height:1.4;">%Lower · %Insize · %Upper · Xbar · SD · Diameter · Bulk Density</div>
+          </div>
+          <i class="ti ti-chevron-right" aria-hidden="true" style="font-size:16px;color:var(--text3);margin-left:auto;margin-right:14px;"></i>
+        </div>
+      </button>
+
+      <button onclick="selectFormType('sv')" style="width:100%;padding:0;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);cursor:pointer;text-align:left;transition:all 0.18s;font-family:inherit;overflow:hidden;" onmouseover="this.style.borderColor='#534AB7';this.style.boxShadow='0 2px 12px rgba(83,74,183,0.12)'" onmouseout="this.style.borderColor='var(--border)';this.style.boxShadow='none'">
+        <div style="display:flex;align-items:center;">
+          <div style="width:56px;min-height:80px;background:#EEEDFE;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <i class="ti ti-wave-sine" aria-hidden="true" style="font-size:24px;color:#3C3489;"></i>
+          </div>
+          <div style="padding:14px 16px;">
+            <div style="font-size:15px;font-weight:600;color:var(--text);margin-bottom:3px;">SV</div>
+            <div style="font-size:12px;color:var(--text2);line-height:1.4;">Sinking Value · Sinking Time</div>
+          </div>
+          <i class="ti ti-chevron-right" aria-hidden="true" style="font-size:16px;color:var(--text3);margin-left:auto;margin-right:14px;"></i>
+        </div>
+      </button>
+
+      <button onclick="goToSpec()" style="width:100%;padding:0;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);cursor:pointer;text-align:left;transition:all 0.18s;font-family:inherit;overflow:hidden;" onmouseover="this.style.borderColor='#BA7517';this.style.boxShadow='0 2px 12px rgba(186,117,23,0.12)'" onmouseout="this.style.borderColor='var(--border)';this.style.boxShadow='none'">
+        <div style="display:flex;align-items:center;gap:0;">
+          <div style="width:56px;min-height:80px;background:#FAEEDA;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <i class="ti ti-settings" aria-hidden="true" style="font-size:24px;color:#854F0B;"></i>
+          </div>
+          <div style="padding:14px 16px;">
+            <div style="font-size:15px;font-weight:600;color:var(--text);margin-bottom:3px;">SPEC</div>
+            <div style="font-size:12px;color:var(--text2);line-height:1.4;">กำหนด SPEC SV · Sinking Time · Chemical</div>
+          </div>
+          <i class="ti ti-chevron-right" aria-hidden="true" style="font-size:16px;color:var(--text3);margin-left:auto;margin-right:14px;"></i>
+        </div>
+      </button>
+    </div>
+
+    <div style="margin-top:20px;padding:12px 14px;background:var(--bg);border-radius:var(--radius-sm);border:1px solid var(--border);display:flex;align-items:center;gap:10px;">
+      <i class="ti ti-calendar" aria-hidden="true" style="font-size:16px;color:var(--text3);"></i>
+      <span id="home-date" style="font-size:13px;color:var(--text2);"></span>
+    </div>
+  </div>
+</div>
+
+<!-- FORM PAGE -->
+<div class="page" id="page-form">
   <div class="card">
-    <div class="section-hdr"><i class="ti ti-info-circle"></i> ข้อมูลทั่วไป</div>
-    <div class="form-grid">
-      <div class="field"><label>วันที่ *</label><input type="date" id="f-date"></div>
-      <div class="field"><label>เวลา *</label><input type="time" id="f-time"></div>
-      <div class="field">
-        <label>Inspector *</label>
-        <select id="f-inspector">
-          <option value="">-- เลือก Inspector --</option>
-          <option>Inspector 1</option><option>Inspector 2</option><option>Inspector 3</option>
-          <option>Inspector 4</option><option>Inspector 5</option><option>Inspector 6</option><option>Inspector 7</option>
+    <div class="card-title">ข้อมูลทั่วไป</div>
+    <div class="grid-2">
+      <div class="field"><label>1. วันที่</label><input type="date" id="f-date" /></div>
+      <div class="field"><label>3. Checked By</label><select id="f-inspector"><option value="">-- Select Inspector --</option></select></div>
+    </div>
+    <div style="height:10px;"></div>
+    <div class="grid-3">
+      <div class="field"><label>4. Shift</label><select id="f-shift" onchange="updateSamplingTime()"><option value="">-- Select --</option><option>P1</option><option>P2</option><option>P3</option></select></div>
+      <div class="field"><label>2. Sampling Time</label>
+        <select id="f-time">
+          <option value="">-- เลือก Shift ก่อน --</option>
+        </select>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Check</div>
+    <div class="purpose-row" style="margin-bottom:12px;">
+      <button class="purpose-btn" id="btn-round" onclick="selectPurpose('round')">🔄 ตามรอบ</button>
+      <button class="purpose-btn" id="btn-recheck" onclick="selectPurpose('recheck')">⚠️ Recheck</button>
+    </div>
+    <div id="method-field" class="field">
+      <label>Select Method</label>
+      <select id="f-color-method">
+        <option value="">-- Select Method --</option>
+        <option>IR</option>
+        <option>เครื่องวัดสี</option>
+      </select>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">ตำแหน่ง Sampling</div>
+    <div class="field">
+      <select id="f-sampling" onchange="toggleSamplingOthers()">
+        <option value="">-- Select Sampling Position --</option>
+        <option>Mix1</option>
+        <option>Mix2</option>
+        <option>หลังบด</option>
+        <option>Feeder</option>
+        <option>ก่อนลง DIE</option>
+        <option>หลัง DIE</option>
+        <option>HB</option>
+        <option>Dryer</option>
+        <option>Cooler</option>
+        <option>After Sieve</option>
+        <option>Packing</option>
+        <option>Before Sieve</option>
+        <option value="Others">Others</option>
+      </select>
+    </div>
+    <div class="field" id="sampling-others-field" style="display:none;margin-top:8px;">
+      <label>ระบุตำแหน่ง Sampling</label>
+      <input type="text" id="f-sampling-others" placeholder="ระบุตำแหน่ง..." />
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">ข้อมูลการผลิต</div>
+    <div class="grid-3">
+      <div class="field"><label>5. LINE</label>
+        <select id="f-line"><option value="">-- Select --</option>
+          <option>Line 1</option><option>Line 2</option><option>Line 3</option><option>Line 4</option>
+          <option>Line 5</option><option>Line 6</option><option>Line 7</option><option>Line 8</option>
+          <option>C1</option><option>C2</option><option>C3</option><option>C4</option>
+        </select>
+      </div>
+      <div class="field"><label>6. Die Size</label>
+        <select id="f-diesize" onchange="updateSizingPF()">
+          <option value="">-- Select --</option>
+          <option>1.0</option><option>1.2</option><option>1.4</option><option>1.7</option>
+          <option>2.0</option><option>2.3</option><option>Crumble</option>
         </select>
       </div>
       <div class="field">
-        <label>Shift *</label>
-        <select id="f-shift">
-          <option value="">-- เลือก Shift --</option>
+        <label>7. Main Formula</label>
+        <select id="f-formula" onchange="toggleOthers();updateFormPF()">
+          <option value="">-- Select --</option>
+          <option>701</option><option>901</option><option>POLY</option>
+          <option>97LC</option><option>MS9123</option><option>MS3618</option>
+          <option>BROODS</option><option>TNT</option><option value="OTHERS">OTHERS</option>
+        </select>
+      </div>
+    </div>
+    <div style="height:10px;"></div>
+    <div class="grid-3">
+      <div class="field" id="others-field" style="display:none;">
+        <label>ระบุ Main Formula</label>
+        <input type="text" id="f-formula-others" placeholder="ระบุสูตร..." />
+      </div>
+      <div class="field">
+        <label>8. Sub Formula</label>
+        <select id="f-subformula">
+          <option value="">-- Select --</option>
+          <option>P</option><option>S</option><option>G</option><option>NK</option>
+          <option>B1</option><option>B2</option><option>B3</option><option>NONE</option>
+        </select>
+      </div>
+      <div class="field"><label>9. Feed Code</label><input type="text" id="f-feedcode" placeholder="Feed code" /></div>
+      <div class="field"><label>10. Lot</label><input type="text" id="f-lot" placeholder="Lot number" /></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title"><span id="form-type-title">การวัดค่า</span></div>
+    <div id="sec-quality">
+    <div class="grid-2" style="margin-bottom:12px;">
+      <div class="field">
+        <label>11. %M</label>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <input type="number" id="f-color-m" placeholder="0.00" step="0.01" oninput="updateFormPF()" style="flex:1;" />
+          <span id="pf-m" style="font-size:11px;white-space:nowrap;min-width:48px;"></span>
+        </div>
+      </div>
+      <div class="field">
+        <label>12. CP</label>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <input type="number" id="f-cp" placeholder="0.00" step="0.01" oninput="updateFormPF()" style="flex:1;" />
+          <span id="pf-cp" style="font-size:11px;white-space:nowrap;min-width:48px;"></span>
+        </div>
+      </div>
+      <div class="field">
+        <label>13. FAT</label>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <input type="number" id="f-fat" placeholder="0.00" step="0.01" oninput="updateFormPF()" style="flex:1;" />
+          <span id="pf-fat" style="font-size:11px;white-space:nowrap;min-width:48px;"></span>
+        </div>
+      </div>
+      <div class="field">
+        <label>14. Fiber</label>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <input type="number" id="f-fiber" placeholder="0.00" step="0.01" oninput="updateFormPF()" style="flex:1;" />
+          <span id="pf-fiber" style="font-size:11px;white-space:nowrap;min-width:48px;"></span>
+        </div>
+      </div>
+      <div class="field"><label>15. Bulk NIR</label><input type="number" id="f-bulk-nir" placeholder="0.00" step="0.01" /></div>
+    </div>
+    <div class="divider"></div>
+    <div class="sizing-group">
+      <div class="sizing-group-label">🎨 16. Colors (CIE L*a*b*)</div>
+      <div class="sizing-row">
+        <div class="sizing-field">
+          <div class="sf-label" style="color:#555;">L*</div>
+          <input type="number" id="f-color-l" placeholder="0.00" step="0.01" min="0" max="100" oninput="updateFormPF()" />
+          <span id="pf-l" style="font-size:11px;margin-top:3px;display:block;"></span>
+        </div>
+        <div class="sizing-field"><div class="sf-label" style="color:#C0392B;">a*</div><input type="number" id="f-color-a" placeholder="0.00" step="0.01" /></div>
+        <div class="sizing-field"><div class="sf-label" style="color:#2471A3;">b*</div><input type="number" id="f-color-b" placeholder="0.00" step="0.01" /></div>
+      </div>
+      <div id="color-preview-bar" style="margin-top:10px;height:32px;border-radius:var(--radius-sm);border:1px solid var(--border);background:#ccc;transition:background 0.3s;display:flex;align-items:center;justify-content:center;">
+        <span id="color-preview-label" style="font-size:11px;color:rgba(255,255,255,0.85);font-weight:500;text-shadow:0 1px 2px rgba(0,0,0,0.4);">ตัวอย่างสี (กรอก L* a* b*)</span>
+      </div>
+    </div>
+    </div>
+    <div id="sec-sv" style="display:none;">
+    <div class="divider"></div>
+    <div class="grid-2" style="margin-bottom:12px;">
+      <div class="field"><label>SV</label><input type="number" id="f-sv" placeholder="0.00" step="0.01" /></div>
+      <div class="field"><label>Sinking Time (sec)</label><input type="number" id="f-sinktime" placeholder="0" step="1" /></div>
+    </div>
+    </div>
+    <div id="sec-sizing" style="display:none;">
+    <div class="divider"></div>
+    <div class="sizing-group">
+      <div class="sizing-group-label">📏 17. Sizing — Length (By Scanner)</div>
+      <div id="sizing-spec-bar" style="font-size:11px;color:var(--text3);margin-bottom:8px;background:var(--bg);padding:6px 10px;border-radius:var(--radius-sm);">เลือก Die Size เพื่อดู Spec</div>
+      <div class="sizing-row" style="margin-bottom:8px;">
+        <div class="sizing-field">
+          <div class="sf-label sf-under">% Lower</div>
+          <input type="number" id="f-len-lower" placeholder="0.00" step="0.01" oninput="updateSizingPF()" />
+          <span id="pf-lower" style="font-size:11px;margin-top:3px;display:block;"></span>
+        </div>
+        <div class="sizing-field">
+          <div class="sf-label sf-insize">% Insize</div>
+          <input type="number" id="f-len-insize" placeholder="0.00" step="0.01" oninput="updateSizingPF()" />
+          <span id="pf-insize" style="font-size:11px;margin-top:3px;display:block;"></span>
+        </div>
+        <div class="sizing-field"><div class="sf-label sf-upper">% Upper</div><input type="number" id="f-len-upper" placeholder="0.00" step="0.01" /></div>
+      </div>
+      <div class="sizing-row">
+        <div class="sizing-field"><div class="sf-label sf-maxlen">Xbar</div><input type="number" id="f-len-xbar" placeholder="0.000" step="0.001" /></div>
+        <div class="sizing-field"><div class="sf-label sf-sdlen">SD</div><input type="number" id="f-len-sd" placeholder="0.000" step="0.001" /></div>
+      </div>
+    </div>
+    <div class="sizing-group" style="margin-top:10px;">
+      <div class="sizing-group-label">⬤ 18. Sizing — Diameter (By Scanner)</div>
+      <div class="sizing-row">
+        <div class="sizing-field"><div class="sf-label sf-maxlen">Xbar</div><input type="number" id="f-dia-xbar" placeholder="0.000" step="0.001" /></div>
+        <div class="sizing-field"><div class="sf-label sf-sdlen">SD</div><input type="number" id="f-dia-sd" placeholder="0.000" step="0.001" /></div>
+      </div>
+    </div>
+    <div class="sizing-group" style="margin-top:10px;">
+      <div class="sizing-group-label" style="color:var(--amber);">⚖️ 19. Bulk Density</div>
+      <div class="sizing-row">
+        <div class="sizing-field">
+          <div class="sf-label" style="color:var(--amber);">Bulk Density (g/L)</div>
+          <input type="number" id="f-bulk-density" placeholder="0.00" step="0.01" />
+        </div>
+      </div>
+    </div>
+    <div class="divider" style="margin-top:14px;"></div>
+    <div class="sizing-group" style="margin-top:4px;">
+      <div class="sizing-group-label" style="color:#185FA5;">🪣 20. Sizing — By Sieve</div>
+      <!-- นน.รวม -->
+      <div style="margin-bottom:12px;">
+        <div class="sizing-row" style="grid-template-columns:1fr;margin-bottom:0;">
+          <div class="sizing-field">
+            <div class="sf-label" style="color:var(--text2);">นน. รวม (g)</div>
+            <input type="number" id="f-sieve-total" placeholder="0.000" step="0.001" oninput="calcSieve()" />
+          </div>
+        </div>
+      </div>
+      <!-- Header row -->
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;margin-bottom:6px;">
+        <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;">ส่วน</div>
+        <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;">ขนาด Sieve</div>
+        <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;">นน. (g)</div>
+        <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;">% (อัตโนมัติ)</div>
+      </div>
+      <!-- Lower -->
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;margin-bottom:8px;align-items:center;">
+        <div class="sf-label sf-under" style="font-size:12px;font-weight:600;">Lower</div>
+        <div class="sizing-field"><input type="text" id="f-sieve-lower-size" placeholder="เช่น 3.35" style="border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 10px;font-size:14px;width:100%;font-family:inherit;outline:none;" /></div>
+        <div class="sizing-field"><input type="number" id="f-sieve-lower-wt" placeholder="0.000" step="0.001" oninput="calcSieve()" style="border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 10px;font-size:14px;width:100%;font-family:monospace;outline:none;" /></div>
+        <div class="sizing-field"><input type="text" id="f-sieve-lower-pct" readonly placeholder="—" style="border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 10px;font-size:14px;width:100%;font-family:monospace;background:var(--bg);color:var(--red-dark);font-weight:600;outline:none;" /></div>
+      </div>
+      <!-- Insize -->
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;margin-bottom:8px;align-items:center;">
+        <div class="sf-label sf-insize" style="font-size:12px;font-weight:600;">Insize</div>
+        <div class="sizing-field"><input type="text" id="f-sieve-insize-size" placeholder="เช่น 2.36" style="border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 10px;font-size:14px;width:100%;font-family:inherit;outline:none;" /></div>
+        <div class="sizing-field"><input type="number" id="f-sieve-insize-wt" placeholder="0.000" step="0.001" oninput="calcSieve()" style="border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 10px;font-size:14px;width:100%;font-family:monospace;outline:none;" /></div>
+        <div class="sizing-field"><input type="text" id="f-sieve-insize-pct" readonly placeholder="—" style="border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 10px;font-size:14px;width:100%;font-family:monospace;background:var(--bg);color:var(--green-dark);font-weight:600;outline:none;" /></div>
+      </div>
+      <!-- Upper -->
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;margin-bottom:8px;align-items:center;">
+        <div class="sf-label sf-upper" style="font-size:12px;font-weight:600;">Upper</div>
+        <div class="sizing-field"><input type="text" id="f-sieve-upper-size" placeholder="เช่น 1.70" style="border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 10px;font-size:14px;width:100%;font-family:inherit;outline:none;" /></div>
+        <div class="sizing-field"><input type="number" id="f-sieve-upper-wt" placeholder="0.000" step="0.001" oninput="calcSieve()" style="border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 10px;font-size:14px;width:100%;font-family:monospace;outline:none;" /></div>
+        <div class="sizing-field"><input type="text" id="f-sieve-upper-pct" readonly placeholder="—" style="border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 10px;font-size:14px;width:100%;font-family:monospace;background:var(--bg);color:var(--blue-dark);font-weight:600;outline:none;" /></div>
+      </div>
+      <!-- ฝุ่น -->
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;margin-bottom:4px;align-items:center;">
+        <div class="sf-label" style="font-size:12px;font-weight:600;color:var(--text2);">ฝุ่น</div>
+        <div></div>
+        <div class="sizing-field"><input type="number" id="f-sieve-dust-wt" placeholder="0.000" step="0.001" oninput="calcSieve()" style="border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 10px;font-size:14px;width:100%;font-family:monospace;outline:none;" /></div>
+        <div class="sizing-field"><input type="text" id="f-sieve-dust-pct" readonly placeholder="—" style="border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 10px;font-size:14px;width:100%;font-family:monospace;background:var(--bg);color:var(--text2);font-weight:600;outline:none;" /></div>
+      </div>
+    </div>
+    </div>
+    <div class="ts-bar">
+      <span>🕐</span>
+      <span class="ts-label">เวลาบันทึกข้อมูล</span>
+      <span class="ts-val" id="ts-val">— ยังไม่ได้บันทึก —</span>
+    </div>
+    <button class="submit-btn" onclick="saveRecord()">💾 บันทึกข้อมูล / Save Record</button>
+    <div class="success-toast" id="success-toast"></div>
+  </div>
+</div>
+
+<!-- DASHBOARD PAGE -->
+<div class="page" id="page-dashboard">
+  <div class="dash-header"><h2>📊 Dashboard</h2><button class="btn" onclick="renderDashboard()">🔄 Refresh</button></div>
+  <div class="card" style="margin-bottom:16px;">
+    <div class="card-title">🔍 กรองข้อมูล</div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
+      <div class="field">
+        <label style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.05em;">LINE</label>
+        <select id="dd-line" onchange="renderDashboard()">
+          <option value="">ทุก LINE</option>
+          <option>Line 1</option><option>Line 2</option><option>Line 3</option><option>Line 4</option>
+          <option>Line 5</option><option>Line 6</option><option>Line 7</option><option>Line 8</option>
+          <option>C1</option><option>C2</option><option>C3</option><option>C4</option>
+        </select>
+      </div>
+      <div class="field">
+        <label style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.05em;">Shift</label>
+        <select id="dd-shift" onchange="renderDashboard()">
+          <option value="">ทุก Shift</option>
           <option>P1</option><option>P2</option><option>P3</option>
         </select>
       </div>
       <div class="field">
-        <label>Sampling *</label>
-        <div class="samp-dd" id="samp-dd">
-          <button type="button" class="samp-trigger" id="samp-trigger" onclick="toggleSampPanel()">
-            <span id="samp-lbl" style="color:var(--text-ter)">-- เลือก Sampling --</span>
-            <i class="ti ti-chevron-down" style="font-size:13px;color:var(--text-ter)"></i>
-          </button>
-          <div class="samp-panel" id="samp-panel"></div>
-        </div>
-        <input type="hidden" id="f-sampling">
-      </div>
-      <div class="field full">
-        <label>Check</label>
-        <div class="check-group">
-          <button class="check-opt" id="chk-ck" onclick="selCheck('ตรวจสอบ')" type="button">
-            <i class="ti ti-circle-check" style="font-size:22px;color:var(--blue)"></i>ตรวจสอบ
-          </button>
-          <button class="check-opt" id="chk-rc" onclick="selCheck('Recheck')" type="button">
-            <i class="ti ti-refresh-alert" style="font-size:22px;color:var(--purple)"></i>Recheck
-          </button>
-          <button class="check-opt sel-none" id="chk-none" onclick="selCheck('')" type="button" style="max-width:110px">
-            <i class="ti ti-minus" style="font-size:22px;color:var(--text-ter)"></i>ไม่ระบุ
-          </button>
-        </div>
-      </div>
-      <div class="field full"><label>Remark</label><textarea id="f-remark" placeholder="หมายเหตุ (ถ้ามี)"></textarea></div>
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="section-hdr"><i class="ti ti-table"></i> ตารางการผลิต & ผลการตรวจ</div>
-    <div class="prod-wrap">
-      <table class="prod-table">
-        <thead>
-          <tr>
-            <th class="th-b" style="width:26px"></th>
-            <th class="th-b">LINE</th>
-            <th class="th-b">Main Formula</th>
-            <th class="th-b">Sub Formula</th>
-            <th class="th-b">Feed Code</th>
-            <th class="th-b">Die Size</th>
-            <th class="th-b">SV</th>
-            <th class="th-g">SPEC Min</th>
-            <th class="th-g">SPEC Max</th>
-            <th class="th-b">ผล</th>
-          </tr>
-        </thead>
-        <tbody id="prod-tbody"></tbody>
-      </table>
-    </div>
-    <button class="add-row-btn" onclick="addRow()" type="button"><i class="ti ti-plus"></i> เพิ่มแถว</button>
-    <div class="btn-row">
-      <button class="btn" onclick="clearForm()"><i class="ti ti-refresh"></i> ล้างข้อมูล</button>
-      <button class="btn primary" id="save-btn" onclick="saveRecord()"><i class="ti ti-device-floppy"></i> บันทึก → Google Sheet</button>
-    </div>
-  </div>
-</div>
-
-<!-- ═══ PAGE: RECORDS ═══ -->
-<div id="page-records" class="page">
-  <div class="card">
-    <div class="search-row">
-      <div class="search-title">รายการทั้งหมด (<span id="rec-count">0</span> รายการ)</div>
-      <div class="search-controls">
-        <input class="search-input" type="text" id="search" placeholder="ค้นหา Inspector / Main Formula..." oninput="renderTable()">
-        <select class="filter-sel" id="filter-result" onchange="renderTable()">
-          <option value="">ทั้งหมด</option><option>Pass</option><option>Fail</option><option>Hold</option>
+        <label style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.05em;">Main Formula</label>
+        <select id="dd-mainformula" onchange="renderDashboard()">
+          <option value="">ทุก Formula</option>
+          <option>701</option><option>901</option><option>POLY</option>
+          <option>97LC</option><option>MS9123</option><option>MS3618</option>
+          <option>BROODS</option><option>TNT</option><option>OTHERS</option>
         </select>
       </div>
-    </div>
-    <div style="overflow-x:auto">
-      <table class="rec-table">
-        <thead><tr>
-          <th>#</th><th>วันที่</th><th>เวลา</th><th>Inspector</th><th>Shift</th><th>Check</th>
-          <th>Sampling</th><th>LINE</th><th>Main</th><th>Sub</th>
-          <th>Feed Code</th><th>Die Size</th><th>SV</th><th>SPEC</th><th>ผล</th><th></th>
-        </tr></thead>
-        <tbody id="rec-body"></tbody>
-      </table>
-      <div id="rec-empty" class="empty" style="display:none">
-        <i class="ti ti-database-off" style="font-size:32px;display:block;margin-bottom:9px"></i>
-        ยังไม่มีข้อมูล — กด Sync เพื่อดึงจาก Google Sheet
+      <div class="field">
+        <label style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.05em;">Sub Formula</label>
+        <select id="dd-subformula" onchange="renderDashboard()">
+          <option value="">ทุก Sub Formula</option>
+          <option>P</option><option>S</option><option>G</option><option>NK</option>
+          <option>B1</option><option>B2</option><option>B3</option><option>NONE</option>
+        </select>
+      </div>
+      <div class="field">
+        <label style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.05em;">Feed Code</label>
+        <select id="dd-feedcode" onchange="renderDashboard()">
+          <option value="">ทุก Feed Code</option>
+        </select>
+      </div>
+      <div class="field">
+        <label style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.05em;">วันที่ (จาก)</label>
+        <input type="date" id="dash-date-from" onchange="renderDashboard()" style="border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 10px;font-size:14px;font-family:inherit;background:var(--surface);color:var(--text);outline:none;" />
+      </div>
+      <div class="field">
+        <label style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.05em;">วันที่ (ถึง)</label>
+        <input type="date" id="dash-date-to" onchange="renderDashboard()" style="border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 10px;font-size:14px;font-family:inherit;background:var(--surface);color:var(--text);outline:none;" />
       </div>
     </div>
+    <div style="margin-top:12px;display:flex;gap:8px;align-items:center;">
+      <button class="btn" onclick="clearDashFilters()">✕ ล้างตัวกรอง</button>
+      <span id="dash-filter-label" style="font-size:12px;color:var(--text3);"></span>
+    </div>
+  </div>
+
+  <!-- PARAMETER GRAPH SELECTOR -->
+  <div class="card" style="margin-bottom:16px;">
+    <div class="card-title">📈 เลือก Parameter ที่ต้องการดูกราฟ <span style="font-weight:400;font-size:11px;color:var(--text3);">— เลือกได้หลายอัน</span></div>
+    <div class="chip-row">
+      <span class="chip active" data-param="sv"      onclick="toggleParam(this)">📊 SV</span>
+      <span class="chip active" data-param="cp"      onclick="toggleParam(this)">📊 CP</span>
+      <span class="chip active" data-param="sink"    onclick="toggleParam(this)">⏱ Sinking Time</span>
+      <span class="chip active" data-param="sizing"  onclick="toggleParam(this)">📏 % Sizing</span>
+      <span class="chip active" data-param="color"   onclick="toggleParam(this)">🎨 Color (L*a*b*)</span>
+    </div>
+  </div>
+  <div class="stats-grid" id="stats-grid"></div>
+  <div class="table-card" style="margin-bottom:16px;">
+    <div class="table-header"><h3>📋 สรุปตาม LINE × Feed Code</h3></div>
+    <div class="table-wrap"><table><thead><tr><th>LINE</th><th>Feed Code</th><th>จำนวน</th><th>ตามรอบ</th><th>Recheck</th><th>Avg SV</th><th>Avg CP</th><th>Avg Sinking</th></tr></thead><tbody id="line-summary-body"></tbody></table></div>
+  </div>
+  <div class="charts-grid">
+    <div class="chart-card" id="chart-card-sizing" style="grid-column:span 2;">
+      <div class="chart-title">📏 % Sizing Distribution (Under / Insize / Upper)</div>
+      <div class="chart-wrap" style="height:240px;"><canvas id="chart-sizing-pct"></canvas></div>
+    </div>
+    <div class="chart-card" id="chart-card-feedcode"><div class="chart-title">Check ตาม Feed Code</div><div class="chart-wrap"><canvas id="chart-feedcode"></canvas></div></div>
+    <div class="chart-card" id="chart-card-sv"><div class="chart-title">📊 แนวโน้มค่า SV</div><div class="chart-wrap"><canvas id="chart-sv"></canvas></div></div>
+    <div class="chart-card" id="chart-card-cp"><div class="chart-title">📊 แนวโน้มค่า CP</div><div class="chart-wrap"><canvas id="chart-cp"></canvas></div></div>
+    <div class="chart-card" id="chart-card-sink"><div class="chart-title">⏱ แนวโน้ม Sinking Time</div><div class="chart-wrap"><canvas id="chart-sink"></canvas></div></div>
+    <div class="chart-card" id="chart-card-colorl"><div class="chart-title">🎨 แนวโน้มค่า L* (Color)</div><div class="chart-wrap"><canvas id="chart-colorl"></canvas></div></div>
+    <div class="chart-card" id="chart-card-colora"><div class="chart-title">🎨 แนวโน้มค่า a* (Color)</div><div class="chart-wrap"><canvas id="chart-colora"></canvas></div></div>
+    <div class="chart-card" id="chart-card-colorb"><div class="chart-title">🎨 แนวโน้มค่า b* (Color)</div><div class="chart-wrap"><canvas id="chart-colorb"></canvas></div></div>
   </div>
 </div>
 
-<!-- ═══ PAGE: SPEC ═══ -->
-<div id="page-spec" class="page">
-  <div class="card">
-    <div class="section-hdr"><i class="ti ti-ruler"></i> กำหนด SPEC ตาม Main Formula</div>
-    <p style="font-size:12px;color:var(--text-sec);margin-bottom:14px">ระบบจะคำนวณ Pass/Fail อัตโนมัติเมื่อกรอก SV ตาม SPEC ที่กำหนด</p>
-    <div style="overflow-x:auto">
-      <table class="spec-mgr">
-        <thead><tr>
-          <th style="width:150px">Main Formula</th>
-          <th style="width:120px">Sub Formula</th>
-          <th style="width:110px;text-align:center">SV Min</th>
-          <th style="width:110px;text-align:center">SV Max</th>
-          <th style="width:55px"></th>
-        </tr></thead>
-        <tbody id="spec-tbody"></tbody>
-      </table>
+<!-- SV PAGE -->
+<div class="page" id="page-sv-entry">
+  <div style="max-width:100%;overflow-x:auto;">
+    <div class="dash-header">
+      <h2>⚗️ บันทึกค่า SV</h2>
     </div>
-    <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
-      <div style="font-size:11px;font-weight:700;color:var(--text-sec);margin-bottom:9px;text-transform:uppercase;letter-spacing:.4px">เพิ่ม Formula ใหม่</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 90px 90px auto;gap:8px;align-items:end">
-        <div class="field"><label>Main Formula</label><select id="new-main" onchange="onNMC()"><option value="">-- เลือก --</option></select></div>
-        <div class="field"><label>Sub Formula</label><select id="new-sub"><option value="">ทั้งหมด</option></select></div>
-        <div class="field"><label>SV Min</label><input type="number" id="new-min" placeholder="0" style="font-family:'IBM Plex Mono',monospace"></div>
-        <div class="field"><label>SV Max</label><input type="number" id="new-max" placeholder="0" style="font-family:'IBM Plex Mono',monospace"></div>
-        <div class="field" style="justify-content:flex-end"><label style="opacity:0">x</label>
-          <button class="btn success" onclick="addSpec()"><i class="ti ti-plus"></i> เพิ่ม</button>
+
+    <!-- Header Info -->
+    <div class="card" style="margin-bottom:12px;">
+      <!-- แถวที่ 1: วันที่ Inspector Shift Sampling Time Sampling -->
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr;gap:12px;margin-bottom:14px;">
+        <div class="field">
+          <label style="font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.04em;">วันที่ *</label>
+          <input type="date" id="sv-entry-date" />
+        </div>
+        <div class="field">
+          <label style="font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.04em;">Inspector *</label>
+          <select id="sv-entry-inspector"><option value="">-- เลือก Inspector --</option></select>
+        </div>
+        <div class="field">
+          <label style="font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.04em;">Shift *</label>
+          <select id="sv-entry-shift" onchange="updateSVSamplingTime()">
+            <option value="">-- เลือก Shift --</option>
+            <option>P1</option><option>P2</option><option>P3</option>
+          </select>
+        </div>
+        <div class="field">
+          <label style="font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.04em;">เวลา (Sampling Time) *</label>
+          <select id="sv-entry-time"><option value="">-- เลือก Shift ก่อน --</option></select>
+        </div>
+        <div class="field">
+          <label style="font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.04em;">Sampling *</label>
+          <select id="sv-entry-sampling">
+            <option value="">-- เลือก Sampling --</option>
+            <option>Mix1</option><option>Mix2</option><option>หลังบด</option><option>Feeder</option>
+            <option>ก่อนลง DIE</option><option>หลัง DIE</option><option>HB</option>
+            <option>Dryer</option><option>Cooler</option><option>After Sieve</option>
+            <option>Packing</option><option>Before Sieve</option><option>Others</option>
+          </select>
+        </div>
+      </div>
+      <!-- แถวที่ 2: Check -->
+      <div>
+        <div style="font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:8px;">Check</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <button id="sv-check-round" onclick="selectSVCheck('round')"
+            style="padding:18px 12px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);color:var(--text2);cursor:pointer;font-family:inherit;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;transition:all 0.15s;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#1a3a8f" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m9 12 2 2 4-4"/></svg>
+            <span style="font-size:13px;font-weight:500;">ตรวจสอบ</span>
+          </button>
+          <button id="sv-check-recheck" onclick="selectSVCheck('recheck')"
+            style="padding:18px 12px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);color:var(--text2);cursor:pointer;font-family:inherit;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;transition:all 0.15s;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#534AB7" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11A8.1 8.1 0 0 0 4.5 9M4 5v4h4"/><path d="M4 13a8.1 8.1 0 0 0 15.5 2m.5 4v-4h-4"/></svg>
+            <span style="font-size:13px;font-weight:500;">Recheck</span>
+          </button>
         </div>
       </div>
     </div>
-    <div class="btn-row">
-      <button class="btn primary" onclick="pushSpec()"><i class="ti ti-cloud-upload"></i> บันทึก SPEC → Google Sheet</button>
+
+    <!-- SV Table -->
+    <div class="table-card">
+      <div style="overflow-x:auto;">
+        <table id="sv-entry-table" style="width:100%;border-collapse:collapse;font-size:12px;min-width:900px;">
+          <thead>
+            <tr>
+              <th rowspan="2" style="padding:10px 8px;background:#1a3a5c;color:#fff;text-align:center;border:1px solid rgba(255,255,255,0.15);width:32px;"></th>
+              <th rowspan="2" style="padding:10px 8px;background:#1a3a5c;color:#fff;text-align:center;border:1px solid rgba(255,255,255,0.15);white-space:nowrap;">LINE</th>
+              <th rowspan="2" style="padding:10px 8px;background:#1a3a5c;color:#fff;text-align:center;border:1px solid rgba(255,255,255,0.15);white-space:nowrap;">MAIN<br>FORMULA</th>
+              <th rowspan="2" style="padding:10px 8px;background:#1a3a5c;color:#fff;text-align:center;border:1px solid rgba(255,255,255,0.15);white-space:nowrap;">SUB<br>FORMULA</th>
+              <th rowspan="2" style="padding:10px 8px;background:#1a3a5c;color:#fff;text-align:center;border:1px solid rgba(255,255,255,0.15);white-space:nowrap;">FEED CODE</th>
+              <th rowspan="2" style="padding:10px 8px;background:#1a3a5c;color:#fff;text-align:center;border:1px solid rgba(255,255,255,0.15);white-space:nowrap;">DIE SIZE</th>
+              <th colspan="4" style="padding:8px;background:#1a3a5c;color:#fff;text-align:center;border:1px solid rgba(255,255,255,0.15);">SV</th>
+              <th colspan="3" style="padding:8px;background:#2d6a27;color:#fff;text-align:center;border:1px solid rgba(255,255,255,0.15);">SINKING TIME (ST)</th>
+            </tr>
+            <tr>
+              <th style="padding:8px;background:#1e456e;color:#fff;text-align:center;border:1px solid rgba(255,255,255,0.15);">SV</th>
+              <th style="padding:8px;background:#1e456e;color:#fff;text-align:center;border:1px solid rgba(255,255,255,0.15);white-space:nowrap;">SPEC MIN</th>
+              <th style="padding:8px;background:#1e456e;color:#fff;text-align:center;border:1px solid rgba(255,255,255,0.15);white-space:nowrap;">SPEC MAX</th>
+              <th style="padding:8px;background:#1e456e;color:#fff;text-align:center;border:1px solid rgba(255,255,255,0.15);white-space:nowrap;">RESULT SV</th>
+              <th style="padding:8px;background:#356b2e;color:#fff;text-align:center;border:1px solid rgba(255,255,255,0.15);white-space:nowrap;">ST (วิ)</th>
+              <th style="padding:8px;background:#356b2e;color:#fff;text-align:center;border:1px solid rgba(255,255,255,0.15);white-space:nowrap;">SPEC MAX</th>
+              <th style="padding:8px;background:#356b2e;color:#fff;text-align:center;border:1px solid rgba(255,255,255,0.15);white-space:nowrap;">RESULT ST</th>
+            </tr>
+          </thead>
+          <tbody id="sv-entry-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Bottom Actions -->
+    <div style="display:flex;gap:10px;margin-top:14px;padding-bottom:24px;align-items:center;">
+      <button class="btn btn-primary" onclick="addSVRow()" style="padding:12px 20px;font-size:14px;">+ เพิ่มแถว</button>
+      <button class="btn btn-excel" onclick="saveSVRows()" style="padding:12px 24px;font-size:14px;">💾 บันทึกข้อมูล</button>
+      <button onclick="showPage('home',document.querySelector('.nav-tab'));document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));document.querySelector('.nav-tab').classList.add('active');"
+        style="background:var(--surface);border:1px solid var(--border);cursor:pointer;padding:12px 16px;border-radius:var(--radius-sm);color:var(--text);transition:all 0.15s;display:inline-flex;align-items:center;gap:6px;font-size:14px;font-family:inherit;"
+        onmouseover="this.style.background='var(--bg)'" onmouseout="this.style.background='var(--surface)'" title="กลับหน้าหลัก">
+        <i class="ti ti-home" aria-hidden="true" style="font-size:18px;"></i> หน้าหลัก
+      </button>
     </div>
   </div>
 </div>
 
-<div class="toast" id="toast-el"></div>
+<!-- RECORDS PAGE -->
+<div class="page" id="page-records">
+  <div class="table-card">
+    <div class="table-header">
+      <h3>📁 ข้อมูลทั้งหมด</h3>
+      <span class="count" id="rec-count">0 รายการ</span>
+      <button class="btn btn-excel" style="margin-left:auto;" onclick="exportExcel()">⬇ Export Excel</button>
+    </div>
+    <div class="filter-bar">
+      <select id="filter-shift" onchange="renderTable()"><option value="">Shift ทั้งหมด</option><option>P1</option><option>P2</option><option>P3</option></select>
+      <select id="filter-line" onchange="renderTable()"><option value="">Line ทั้งหมด</option><option>Line 1</option><option>Line 2</option><option>Line 3</option><option>Line 4</option><option>Line 5</option><option>Line 6</option><option>Line 7</option><option>Line 8</option><option>C1</option><option>C2</option><option>C3</option><option>C4</option></select>
+      <select id="filter-purpose" onchange="renderTable()"><option value="">Check ทั้งหมด</option><option value="round">ตามรอบ</option><option value="recheck">Recheck</option></select>
+      <input type="date" id="filter-date" onchange="renderTable()" />
+      <button class="btn" onclick="clearFilters()">✕ ล้าง</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th>#</th><th>วันที่</th><th>Sampling Time</th><th>Inspector</th><th>Shift</th>
+          <th>Method</th><th>Check</th><th>Sampling</th><th>LINE</th>
+          <th>Die Size</th><th>Main Formula</th><th>Sub Formula</th><th>Feed Code</th><th>Lot</th>
+          <th>%M</th><th>CP</th><th>FAT</th><th>Fiber</th>
+          <th>L*</th><th>L* Result</th><th>a*</th><th>b*</th>
+          <th>%Lower</th><th>%Insize(L)</th><th>%Upper</th><th>Xbar(L)</th><th>SD(L)</th>
+          <th>Xbar(D)</th><th>SD(D)</th>
+          <th>บันทึกเมื่อ</th><th></th>
+        </tr></thead>
+        <tbody id="table-body"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- CONTROL PAGE -->
+<div class="page" id="page-control">
+  <div class="dash-header">
+    <h2>⚙️ Control Spec</h2>
+    <button class="btn btn-primary" onclick="saveControlSpec()">💾 บันทึก Spec</button>
+  </div>
+  <div class="card">
+    <div class="card-title">กำหนดค่า Spec ตาม Main Formula</div>
+    <div style="overflow-x:auto;">
+      <table id="control-table" style="width:100%;border-collapse:collapse;font-size:13px;">
+        <thead>
+          <tr>
+            <th style="padding:10px 10px;background:var(--green);color:#fff;text-align:left;white-space:nowrap;">Main Formula</th>
+            <th style="padding:10px 8px;background:var(--green);color:#fff;text-align:center;white-space:nowrap;">%M Min</th>
+            <th style="padding:10px 8px;background:var(--green);color:#fff;text-align:center;white-space:nowrap;">%M Max</th>
+            <th style="padding:10px 8px;background:var(--green);color:#fff;text-align:center;white-space:nowrap;">CP Min</th>
+            <th style="padding:10px 8px;background:var(--green);color:#fff;text-align:center;white-space:nowrap;">CP Max</th>
+            <th style="padding:10px 8px;background:var(--green);color:#fff;text-align:center;white-space:nowrap;">FAT Min</th>
+            <th style="padding:10px 8px;background:var(--green);color:#fff;text-align:center;white-space:nowrap;">FAT Max</th>
+            <th style="padding:10px 8px;background:var(--green);color:#fff;text-align:center;white-space:nowrap;">Fiber Max</th>
+            <th style="padding:10px 8px;background:var(--green);color:#fff;text-align:center;white-space:nowrap;">L* Min</th>
+            <th style="padding:10px 8px;background:var(--green);color:#fff;text-align:center;white-space:nowrap;">L* Max</th>
+          </tr>
+        </thead>
+        <tbody id="control-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- SPEC PAGE -->
+<div class="page" id="page-spec">
+  <div class="dash-header"><h2>📐 กำหนด SPEC</h2></div>
+
+  <!-- SPEC SV -->
+  <div class="card" style="margin-bottom:16px;">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+      <i class="ti ti-table-options" style="font-size:16px;color:var(--blue-dark);" aria-hidden="true"></i>
+      <strong style="font-size:13px;color:var(--blue-dark);">กำหนด SPEC ตาม MAIN FORMULA</strong>
+    </div>
+    <p style="font-size:12px;color:var(--text2);margin-bottom:14px;">ระบบจะคำนวณ Pass/Fail อัตโนมัติเมื่อกรอก SV ตาม SPEC ที่กำหนด</p>
+    <div style="overflow-x:auto;">
+      <table style="width:100%;border-collapse:collapse;font-size:13px;">
+        <thead>
+          <tr>
+            <th style="padding:12px 16px;background:#1a3a5c;color:#fff;text-align:left;font-weight:600;font-size:12px;letter-spacing:0.05em;">MAIN FORMULA</th>
+            <th style="padding:12px 16px;background:#1a3a5c;color:#fff;text-align:left;font-weight:600;font-size:12px;letter-spacing:0.05em;">SUB FORMULA</th>
+            <th style="padding:12px 16px;background:#1a3a5c;color:#fff;text-align:center;font-weight:600;font-size:12px;letter-spacing:0.05em;">SV MIN</th>
+            <th style="padding:12px 16px;background:#1a3a5c;color:#fff;text-align:center;font-weight:600;font-size:12px;letter-spacing:0.05em;">SV MAX</th>
+            <th style="padding:12px 16px;background:#1a3a5c;color:#fff;text-align:center;width:60px;"></th>
+          </tr>
+        </thead>
+        <tbody id="spec-sv-tbody"></tbody>
+      </table>
+    </div>
+    <button class="btn btn-primary" style="margin-top:12px;" onclick="addSpecSVRow()">+ เพิ่ม Formula</button>
+  </div>
+
+  <!-- SPEC SINKING TIME -->
+  <div class="card" style="margin-bottom:16px;">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+      <i class="ti ti-clock" style="font-size:16px;color:var(--blue-dark);" aria-hidden="true"></i>
+      <strong style="font-size:13px;color:var(--blue-dark);">กำหนด SPEC SINKING TIME ตาม DIE SIZE</strong>
+    </div>
+    <p style="font-size:12px;color:var(--text2);margin-bottom:14px;">ค่า ST <strong>ยิ่งต่ำยิ่งดี</strong> — ระบบจะ Pass เมื่อ ST ≤ Max ที่กำหนด</p>
+    <div style="overflow-x:auto;">
+      <table style="width:100%;border-collapse:collapse;font-size:13px;">
+        <thead>
+          <tr>
+            <th style="padding:12px 16px;background:#1a3a5c;color:#fff;text-align:left;font-weight:600;font-size:12px;letter-spacing:0.05em;">DIE SIZE</th>
+            <th style="padding:12px 16px;background:#1a3a5c;color:#fff;text-align:center;font-weight:600;font-size:12px;letter-spacing:0.05em;">ST MAX (วิ)</th>
+            <th style="padding:12px 16px;background:#1a3a5c;color:#fff;text-align:center;width:60px;"></th>
+          </tr>
+        </thead>
+        <tbody id="spec-st-tbody"></tbody>
+      </table>
+    </div>
+    <button class="btn btn-primary" style="margin-top:12px;" onclick="addSpecSTRow()">+ เพิ่ม Die Size</button>
+  </div>
+
+  <!-- SPEC SIZING -->
+  <div class="card" style="margin-bottom:16px;">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+      <i class="ti ti-ruler-2" style="font-size:16px;color:#185FA5;" aria-hidden="true"></i>
+      <span style="font-size:13px;font-weight:600;color:#185FA5;">กำหนด SPEC Sizing ตาม Die Size</span>
+    </div>
+    <p style="font-size:12px;color:var(--text2);margin-bottom:14px;">%Lower <strong>ยิ่งต่ำยิ่งดี</strong> (≤ Max) · %Insize <strong>ยิ่งสูงยิ่งดี</strong> (≥ Min)</p>
+    <div style="overflow-x:auto;">
+      <table style="width:100%;border-collapse:collapse;font-size:13px;">
+        <thead>
+          <tr>
+            <th style="padding:12px 16px;background:#1a3a5c;color:#fff;text-align:left;font-weight:600;font-size:12px;letter-spacing:0.05em;">DIE SIZE</th>
+            <th style="padding:12px 16px;background:#1a3a5c;color:#fff;text-align:center;font-weight:600;font-size:12px;">%LOWER MAX</th>
+            <th style="padding:12px 16px;background:#1a3a5c;color:#fff;text-align:center;font-weight:600;font-size:12px;">%INSIZE MIN</th>
+            <th style="padding:12px 16px;background:#1a3a5c;color:#fff;text-align:center;width:60px;"></th>
+          </tr>
+        </thead>
+        <tbody id="spec-sizing-tbody"></tbody>
+      </table>
+    </div>
+    <button class="btn btn-primary" style="margin-top:12px;" onclick="addSpecSizingRow()">+ เพิ่ม Die Size</button>
+  </div>
+
+
+  <button class="btn btn-primary" style="padding:12px 28px;font-size:14px;" onclick="saveAllSpec()">💾 บันทึก SPEC ทั้งหมด</button>
+</div>
+
+<!-- SPEC PAGE -->
+<div class="page" id="page-spec">
+  <div class="dash-header"><h2>📐 กำหนด SPEC</h2></div>
+
+  <!-- SPEC SV -->
+  <div class="card" style="margin-bottom:16px;">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+      <i class="ti ti-adjustments-horizontal" style="font-size:16px;color:#185FA5;" aria-hidden="true"></i>
+      <span style="font-size:13px;font-weight:600;color:#185FA5;">กำหนด SPEC ตาม MAIN FORMULA</span>
+    </div>
+    <p style="font-size:12px;color:var(--text2);margin-bottom:14px;">ระบบจะคำนวณ Pass/Fail อัตโนมัติเมื่อกรอก SV ตาม SPEC ที่กำหนด</p>
+    <div style="overflow-x:auto;">
+      <table style="width:100%;border-collapse:collapse;font-size:13px;">
+        <thead>
+          <tr>
+            <th style="padding:11px 16px;background:#1a3a5c;color:#fff;text-align:left;font-weight:600;letter-spacing:0.06em;font-size:12px;">MAIN FORMULA</th>
+            <th style="padding:11px 16px;background:#1a3a5c;color:#fff;text-align:left;font-weight:600;letter-spacing:0.06em;font-size:12px;">SUB FORMULA</th>
+            <th style="padding:11px 16px;background:#1a3a5c;color:#fff;text-align:center;font-weight:600;letter-spacing:0.06em;font-size:12px;">SV MIN</th>
+            <th style="padding:11px 16px;background:#1a3a5c;color:#fff;text-align:center;font-weight:600;letter-spacing:0.06em;font-size:12px;">SV MAX</th>
+            <th style="padding:11px 16px;background:#1a3a5c;color:#fff;text-align:center;width:48px;"></th>
+          </tr>
+        </thead>
+        <tbody id="spec-sv-tbody"></tbody>
+      </table>
+    </div>
+    <button class="btn" onclick="addSpecSVRow()" style="margin-top:12px;color:var(--green-dark);border-color:var(--green);">+ เพิ่ม Formula ใหม่</button>
+  </div>
+
+  <!-- SPEC SINKING TIME -->
+  <div class="card" style="margin-bottom:16px;">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+      <i class="ti ti-clock" style="font-size:16px;color:#185FA5;" aria-hidden="true"></i>
+      <span style="font-size:13px;font-weight:600;color:#185FA5;">กำหนด SPEC SINKING TIME ตาม DIE SIZE</span>
+    </div>
+    <p style="font-size:12px;color:var(--text2);margin-bottom:14px;">ค่า ST ยิ่งต่ำยิ่งดี — ระบบจะ Pass เมื่อ ST ≤ Max ที่กำหนด</p>
+    <div style="overflow-x:auto;">
+      <table style="width:100%;border-collapse:collapse;font-size:13px;">
+        <thead>
+          <tr>
+            <th style="padding:11px 16px;background:#1a3a5c;color:#fff;text-align:left;font-weight:600;letter-spacing:0.06em;font-size:12px;">DIE SIZE</th>
+            <th style="padding:11px 16px;background:#1a3a5c;color:#fff;text-align:center;font-weight:600;letter-spacing:0.06em;font-size:12px;">ST MAX (วิ)</th>
+            <th style="padding:11px 16px;background:#1a3a5c;color:#fff;text-align:center;width:48px;"></th>
+          </tr>
+        </thead>
+        <tbody id="spec-st-tbody"></tbody>
+      </table>
+    </div>
+    <button class="btn" onclick="addSpecSTRow()" style="margin-top:12px;color:var(--green-dark);border-color:var(--green);">+ เพิ่ม Die Size ใหม่</button>
+  </div>
+
+  <!-- SPEC CHEMICAL -->
+  <div class="card" style="margin-bottom:16px;">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+      <i class="ti ti-flask" style="font-size:16px;color:#185FA5;" aria-hidden="true"></i>
+      <span style="font-size:13px;font-weight:600;color:#185FA5;">กำหนด SPEC Chemical ตาม MAIN FORMULA</span>
+    </div>
+    <p style="font-size:12px;color:var(--text2);margin-bottom:14px;">กำหนดค่า %M, CP, FAT, Fiber, L* สำหรับแต่ละ Formula</p>
+    <div style="overflow-x:auto;">
+      <table style="width:100%;border-collapse:collapse;font-size:13px;">
+        <thead>
+          <tr>
+            <th style="padding:11px 12px;background:#1a3a5c;color:#fff;text-align:left;font-weight:600;letter-spacing:0.05em;font-size:11px;">MAIN FORMULA</th>
+            <th style="padding:11px 12px;background:#1a3a5c;color:#fff;text-align:center;font-weight:600;font-size:11px;">%M Min</th>
+            <th style="padding:11px 12px;background:#1a3a5c;color:#fff;text-align:center;font-weight:600;font-size:11px;">%M Max</th>
+            <th style="padding:11px 12px;background:#1a3a5c;color:#fff;text-align:center;font-weight:600;font-size:11px;">CP Min</th>
+            <th style="padding:11px 12px;background:#1a3a5c;color:#fff;text-align:center;font-weight:600;font-size:11px;">CP Max</th>
+            <th style="padding:11px 12px;background:#1a3a5c;color:#fff;text-align:center;font-weight:600;font-size:11px;">FAT Min</th>
+            <th style="padding:11px 12px;background:#1a3a5c;color:#fff;text-align:center;font-weight:600;font-size:11px;">FAT Max</th>
+            <th style="padding:11px 12px;background:#1a3a5c;color:#fff;text-align:center;font-weight:600;font-size:11px;">Fiber Min</th>
+            <th style="padding:11px 12px;background:#1a3a5c;color:#fff;text-align:center;font-weight:600;font-size:11px;">Fiber Max</th>
+            <th style="padding:11px 12px;background:#1a3a5c;color:#fff;text-align:center;font-weight:600;font-size:11px;">L* Min</th>
+            <th style="padding:11px 12px;background:#1a3a5c;color:#fff;text-align:center;font-weight:600;font-size:11px;">L* Max</th>
+            <th style="padding:11px 12px;background:#1a3a5c;color:#fff;text-align:center;width:48px;"></th>
+          </tr>
+        </thead>
+        <tbody id="spec-chem-tbody"></tbody>
+      </table>
+    </div>
+    <button class="btn" onclick="addSpecChemRow()" style="margin-top:12px;color:var(--green-dark);border-color:var(--green);">+ เพิ่ม Formula ใหม่</button>
+  </div>
+
+  <div style="padding-bottom:24px;">
+    <button class="btn btn-primary" onclick="saveAllSpec()" style="padding:12px 28px;font-size:14px;">💾 บันทึก SPEC ทั้งหมด</button>
+  </div>
+</div>
 
 <script>
-const GS_URL='https://script.google.com/macros/s/AKfycbyp5RxqIfpq6lZ6D5xp2SoWk9RNBcxzW-Vu7TKjKGT9bNiW1pitF8CPMnzLcWae3-2nXA/exec';
-const MAIN_FORMULAS=['701','901','POLY','MS3618','MS9123','TNT','BROODS','NF'];
-const SUB_MAP={'701':['P'],'901':['S'],'POLY':['G'],'MS3618':['NK'],'MS9123':['B1'],'TNT':['B2'],'BROODS':['B3'],'NF':[]};
-const INSPECTORS=['Inspector 1','Inspector 2','Inspector 3','Inspector 4','Inspector 5','Inspector 6','Inspector 7'];
-const SAMP_LIST=[{n:1,l:'Mix1'},{n:2,l:'Mix2'},{n:3,l:'หลังบด'},{n:4,l:'Feeder'},{n:5,l:'Hot Mass'},{n:6,l:'Hot Pallet'},{n:7,l:'HB'},{n:8,l:'Dryer'},{n:9,l:'Cooler'},{n:10,l:'After Sieve'},{n:11,l:'Packing'}];
-const LINES=['L1','L2','L3','L4','L5','L6','L7','L8'];
-const DEFAULT_SPECS=[{main:'701',sub:'P',min:70,max:110},{main:'901',sub:'S',min:70,max:110},{main:'POLY',sub:'G',min:80,max:120},{main:'MS3618',sub:'NK',min:0,max:0},{main:'MS9123',sub:'B1',min:0,max:0},{main:'TNT',sub:'B2',min:0,max:0},{main:'BROODS',sub:'B3',min:0,max:0},{main:'NF',sub:'',min:0,max:0}];
+// ===== CONFIG =====
+const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbwhyuic-aKlDDyCAUui2NwQdD4KR03ftp2-ZZrx0r2s6gC8-A0rRue3JvCFicKg1zAg/exec';
+const ADMIN_PIN = '1234';
+const LINE_COLORS = ['#1D9E75','#378ADD','#D85A30','#534AB7','#BA7517','#0F6E56','#993C1D','#185FA5'];
+const FC_COLORS   = ['#5DCAA5','#85B7EB','#F0997B','#AFA9EC','#FAC775','#9FE1CB','#C0DD97','#F7C1C1'];
 
-let records=[],specs=[],selCheckVal='',selSampVal='',rowId=0;
-try{const s=localStorage.getItem('sv_r');if(s)records=JSON.parse(s);}catch(e){}
-try{const s=localStorage.getItem('sv_s');if(s)specs=JSON.parse(s);else specs=[...DEFAULT_SPECS];}catch(e){specs=[...DEFAULT_SPECS];}
+// ===== STATE =====
+let records = JSON.parse(localStorage.getItem('qc_records') || '[]');
+let purposeVal = '';
+let charts = {};
 
-function saveLocal(){try{localStorage.setItem('sv_r',JSON.stringify(records));localStorage.setItem('sv_s',JSON.stringify(specs));}catch(e){}}
-function nowDT(){const d=new Date();return{date:d.toISOString().slice(0,10),time:d.toTimeString().slice(0,5)};}
-function fget(id){return(document.getElementById(id)||{}).value||'';}
-function getSpec(main,sub){return specs.find(s=>s.main===main&&s.sub===sub)||specs.find(s=>s.main===main&&!s.sub)||specs.find(s=>s.main===main)||null;}
+const DEFAULT_CONTROL_SPEC = [
+  {formula:'701',   cpMin:36,cpMax:37,lMin:32,lMax:34,mMin:9.5,mMax:10.8,fatMin:'',fatMax:'',fibMax:'',nirMin:''},
+  {formula:'901',   cpMin:38,cpMax:39,lMin:32,lMax:34,mMin:9.5,mMax:10.8,fatMin:'',fatMax:'',fibMax:'',nirMin:''},
+  {formula:'POLY',  cpMin:38,cpMax:39,lMin:32,lMax:34,mMin:9.5,mMax:10.8,fatMin:'',fatMax:'',fibMax:'',nirMin:''},
+  {formula:'MS3618',cpMin:40,cpMax:41,lMin:32,lMax:34,mMin:9.5,mMax:10.8,fatMin:'',fatMax:'',fibMax:'',nirMin:''},
+  {formula:'MS9123',cpMin:32,cpMax:33,lMin:32,lMax:34,mMin:9.5,mMax:10.8,fatMin:'',fatMax:'',fibMax:'',nirMin:''},
+  {formula:'TNT',   cpMin:40,cpMax:41,lMin:32,lMax:34,mMin:9.5,mMax:10.8,fatMin:'',fatMax:'',fibMax:'',nirMin:''},
+  {formula:'BROODS',cpMin:40,cpMax:41,lMin:32,lMax:34,mMin:9.5,mMax:10.8,fatMin:'',fatMax:'',fibMax:'',nirMin:''},
+  {formula:'NF',    cpMin:36,cpMax:37,lMin:32,lMax:34,mMin:9.5,mMax:10.8,fatMin:'',fatMax:'',fibMax:'',nirMin:''},
+];
+let controlSpec = JSON.parse(localStorage.getItem('qc_control_spec') || 'null') || DEFAULT_CONTROL_SPEC;
+let adminMode = false;
 
-async function gsCall(payload){
-  const r=await fetch(GS_URL,{method:'POST',body:JSON.stringify(payload)});
-  const d=await r.json();
-  if(!d.ok)throw new Error(d.error||'GS Error');
-  return d;
-}
+// ===== FORM TYPE SELECTOR =====
+let currentFormType = '';
 
-function setConn(state,msg){
-  const dot=document.getElementById('cdot'),txt=document.getElementById('ctxt'),btn=document.getElementById('syncbtn');
-  dot.className='dot '+(state==='ok'?'dot-ok':state==='err'?'dot-err':'dot-spin');
-  txt.textContent=msg;btn.disabled=(state!=='ok');
-}
+function selectFormType(type) {
+  currentFormType = type;
+  if (type === 'sv') {
+    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+    document.getElementById('page-sv-entry').classList.add('active');
+    document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+    renderSVEntryPage();
+    return;
+  }
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-form').classList.add('active');
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
 
-async function autoConnect(){
-  setConn('spin','กำลังเชื่อมต่อ...');
-  try{await gsCall({action:'getAll'});setConn('ok','Google Sheet พร้อมใช้งาน');syncAll();}
-  catch(e){setConn('err','ออฟไลน์ — ใช้ข้อมูล Local');toast('ใช้ข้อมูล Local ('+records.length+' batch)','info');}
-}
+  const secQuality = document.getElementById('sec-quality');
+  const secSizing  = document.getElementById('sec-sizing');
+  const secSV      = document.getElementById('sec-sv');
 
-async function syncAll(){
-  const btn=document.getElementById('syncbtn');
-  btn.disabled=true;btn.innerHTML='<i class="ti ti-loader-2"></i> Syncing...';
-  toast('กำลัง Sync...','info');
-  try{
-    const res=await gsCall({action:'getAll'});
-    const map={};
-    (res.records||[]).forEach(r=>{
-      const id=String(r['ID']);
-      if(!map[id]){map[id]={id,date:r['วันที่'],time:r['เวลา'],inspector:r['Inspector'],shift:r['Shift'],check:r['Check']||'',sampling:r['Sampling'],lot:r['Lot'],remark:r['Remark']||'',rows:[]};}
-      if(r['LINE']||r['Main Formula']||r['SV']){map[id].rows.push({line:r['LINE']||'',main:r['Main Formula']||'',sub:r['Sub Formula']||'',feedcode:r['Feed Code']||'',diesize:r['Die Size']||'',sv:r['SV']||'',specMin:r['SPEC Min']||'',specMax:r['SPEC Max']||'',result:r['ผล']||''});}
-    });
-    records=Object.values(map).sort((a,b)=>Number(b.id)-Number(a.id));
-    saveLocal();setConn('ok','Google Sheet พร้อมใช้งาน');
-    toast('Sync สำเร็จ — '+records.length+' Batch','ok');
-    renderTable();renderDash();
-  }catch(e){setConn('err','Sync ล้มเหลว');toast('Sync ล้มเหลว: '+e.message,'err');}
-  btn.disabled=false;btn.innerHTML='<i class="ti ti-refresh"></i> Sync';
-}
+  if(secQuality) secQuality.style.display = type==='quality' ? '' : 'none';
+  if(secSizing)  secSizing.style.display  = type==='sizing'  ? '' : 'none';
+  if(secSV)      secSV.style.display      = 'none';
+  const methodFld  = document.getElementById('method-field');
+  if(methodFld)  methodFld.style.display  = type==='sizing' ? 'none' : '';
 
-// Sampling
-function buildSampPanel(){
-  document.getElementById('samp-panel').innerHTML=SAMP_LIST.map(s=>`
-    <div class="samp-opt" id="sopt-${s.n}" onclick="selSamp('${s.l}',${s.n})">
-      <span class="samp-num">${s.n}.</span>
-      <span style="font-size:13px">${s.l}</span>
-      <i class="ti ti-check" style="margin-left:auto;font-size:13px;opacity:0" id="sck-${s.n}"></i>
-    </div>`).join('');
-}
-function toggleSampPanel(){document.getElementById('samp-panel').classList.toggle('open');}
-function selSamp(label,n){
-  selSampVal=label;document.getElementById('f-sampling').value=label;
-  document.getElementById('samp-lbl').textContent=n+'. '+label;
-  document.getElementById('samp-trigger').classList.add('has-val');
-  document.querySelectorAll('.samp-opt').forEach(el=>el.classList.remove('selected'));
-  document.querySelectorAll('[id^="sck-"]').forEach(el=>el.style.opacity='0');
-  document.getElementById('sopt-'+n).classList.add('selected');
-  document.getElementById('sck-'+n).style.opacity='1';
-  document.getElementById('samp-panel').classList.remove('open');
-}
-function clearSamp(){
-  selSampVal='';document.getElementById('f-sampling').value='';
-  document.getElementById('samp-lbl').textContent='-- เลือก Sampling --';
-  document.getElementById('samp-lbl').style.color='var(--text-ter)';
-  document.getElementById('samp-trigger').classList.remove('has-val');
-  document.querySelectorAll('.samp-opt').forEach(el=>el.classList.remove('selected'));
-  document.querySelectorAll('[id^="sck-"]').forEach(el=>el.style.opacity='0');
-}
-document.addEventListener('click',e=>{if(!document.getElementById('samp-dd').contains(e.target))document.getElementById('samp-panel').classList.remove('open');});
-
-// Check
-function selCheck(v){
-  selCheckVal=v;
-  const ck=document.getElementById('chk-ck'),rc=document.getElementById('chk-rc'),nn=document.getElementById('chk-none');
-  ck.className='check-opt';rc.className='check-opt';nn.className='check-opt sel-none';
-  if(v==='ตรวจสอบ')ck.className='check-opt sel-ck';
-  else if(v==='Recheck')rc.className='check-opt sel-rc';
+  const titles = { quality:'🧪 %M, CP, L*', sizing:'📏 Sizing & Bulk Density' };
+  const titleEl = document.getElementById('form-type-title');
+  if(titleEl) titleEl.textContent = titles[type] || 'การวัดค่า';
 }
 
-// Nav
-function showPage(p,btn){
-  document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
-  document.querySelectorAll('.tab-btn').forEach(x=>x.classList.remove('active'));
-  document.getElementById('page-'+p).classList.add('active');
-  btn.classList.add('active');
-  document.getElementById('samp-panel').classList.remove('open');
-  if(p==='records')renderTable();
-  if(p==='spec')renderSpecPage();
+// ===== NAV =====
+function showPage(name, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  if (el) el.classList.add('active');
+  if (name === 'home') { /* just show */ }
+  if (name === 'sv-entry') renderSVEntryPage();
+  if (name === 'dashboard') renderDashboard();
+  if (name === 'records') renderTable();
+  if (name === 'control') renderControlPage();
+  if (name === 'spec') renderSpecPage();
+  if (name === 'spec') renderSpecPage();
 }
 
-// Toast
-function toast(msg,type='info'){
-  const t=document.getElementById('toast-el');
-  t.textContent=msg;t.className='toast '+type+' show';
-  clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),3000);
-}
-
-// Prod table
-function mOpts(){return'<option value="">—</option>'+MAIN_FORMULAS.map(f=>`<option>${f}</option>`).join('');}
-function sOpts(){return'<option value="">None</option><option>P</option><option>S</option><option>G</option><option>NK</option><option>MY</option>';}
-function lOpts(){return'<option value="">—</option>'+LINES.map(l=>`<option>${l}</option>`).join('');}
-function dOpts(){return'<option value="">—</option><option>1.0</option><option>1.2</option><option>1.4</option><option>1.7</option><option>2.0</option><option>2.3</option>';}
-function makeRow(id){
-  return`<tr id="row-${id}">
-    <td style="text-align:center"><button class="del-row-btn" onclick="delRow(${id})">✕</button></td>
-    <td><select class="r-line">${lOpts()}</select></td>
-    <td><select class="r-main" onchange="onMC(${id})">${mOpts()}</select></td>
-    <td><select class="r-sub" onchange="calcRes(${id})">${sOpts()}</select></td>
-    <td><input class="r-feed" type="text" placeholder="Feed Code"></td>
-    <td><select class="r-die">${dOpts()}</select></td>
-    <td><input class="r-sv" type="number" placeholder="0.00" step="0.01" oninput="calcRes(${id})" style="font-family:'IBM Plex Mono',monospace;text-align:center"></td>
-    <td class="spec-td" id="smn-${id}">—</td>
-    <td class="spec-td" id="smx-${id}">—</td>
-    <td class="res-blank" id="res-${id}">—</td>
-  </tr>`;
-}
-function addRow(){rowId++;document.getElementById('prod-tbody').insertAdjacentHTML('beforeend',makeRow(rowId));}
-function delRow(id){document.getElementById('row-'+id)?.remove();if(!document.getElementById('prod-tbody').children.length)addRow();}
-function onMC(id){updSpec(id);calcRes(id);}
-function updSpec(id){
-  const row=document.getElementById('row-'+id);
-  const sp=getSpec(row.querySelector('.r-main').value,row.querySelector('.r-sub').value);
-  document.getElementById('smn-'+id).textContent=sp&&(sp.min||sp.max)?sp.min:'—';
-  document.getElementById('smx-'+id).textContent=sp&&(sp.min||sp.max)?sp.max:'—';
-}
-function calcRes(id){
-  updSpec(id);const row=document.getElementById('row-'+id);
-  const sv=parseFloat(row.querySelector('.r-sv').value);
-  const sp=getSpec(row.querySelector('.r-main').value,row.querySelector('.r-sub').value);
-  const el=document.getElementById('res-'+id);
-  if(!sp||isNaN(sv)||(!sp.min&&!sp.max)){el.className='res-blank';el.textContent='—';return;}
-  const ok=sv>=sp.min&&sv<=sp.max;el.className=ok?'res-pass':'res-fail';el.textContent=ok?'Pass ✓':'Fail ✗';
-}
-function getRows(){
-  return Array.from(document.getElementById('prod-tbody').rows).map(row=>{
-    const main=row.querySelector('.r-main').value,sub=row.querySelector('.r-sub').value;
-    const sv=row.querySelector('.r-sv').value,svN=parseFloat(sv);
-    const sp=getSpec(main,sub);let result='';
-    if(sp&&!isNaN(svN)&&(sp.min||sp.max))result=svN>=sp.min&&svN<=sp.max?'Pass':'Fail';
-    return{line:row.querySelector('.r-line').value,main,sub,feedcode:row.querySelector('.r-feed').value,diesize:row.querySelector('.r-die').value,sv,specMin:sp?sp.min:'',specMax:sp?sp.max:'',result};
-  }).filter(r=>r.line||r.main||r.sv);
-}
-function clearProd(){document.getElementById('prod-tbody').innerHTML='';rowId=0;addRow();}
-function clearForm(){
-  ['f-inspector','f-shift'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('f-remark').value='';selCheck('');clearSamp();clearProd();
-  const n=nowDT();document.getElementById('f-date').value=n.date;document.getElementById('f-time').value=n.time;
-}
-async function saveRecord(){
-  if(!fget('f-inspector')){toast('กรุณาเลือก Inspector','err');return;}
-  if(!fget('f-shift')){toast('กรุณาเลือก Shift','err');return;}
-  if(!selSampVal){toast('กรุณาเลือก Sampling','err');return;}
-  const rows=getRows();if(!rows.length){toast('กรุณากรอกข้อมูลอย่างน้อย 1 แถว','err');return;}
-  const rec={id:Date.now(),date:fget('f-date'),time:fget('f-time'),inspector:fget('f-inspector'),shift:fget('f-shift'),check:selCheckVal,sampling:selSampVal,remark:fget('f-remark'),rows};
-  records.unshift(rec);saveLocal();
-  const btn=document.getElementById('save-btn');btn.disabled=true;btn.innerHTML='<i class="ti ti-loader-2"></i> กำลังบันทึก...';
-  try{await gsCall({action:'save',data:rec});toast('บันทึก Google Sheet สำเร็จ ✓ ('+rows.length+' แถว)','ok');setConn('ok','Google Sheet พร้อมใช้งาน');}
-  catch(e){toast('บันทึก Local แล้ว — Sheet: '+e.message,'err');setConn('err','Sheet error');}
-  btn.disabled=false;btn.innerHTML='<i class="ti ti-device-floppy"></i> บันทึก → Google Sheet';
-  clearForm();
-}
-
-// Records
-function bHtml(r){if(!r)return'—';return`<span class="badge ${r.toLowerCase()}">${r}</span>`;}
-function sBadge(s){if(!s)return'—';const c=s==='P1'?'shift-p1':s==='P2'?'shift-p2':'shift-p3';return`<span class="${c}">${s}</span>`;}
-function cBadge(c){if(!c)return'—';if(c==='ตรวจสอบ')return`<span class="ck-ck"><i class="ti ti-circle-check"></i> ตรวจสอบ</span>`;if(c==='Recheck')return`<span class="ck-rc"><i class="ti ti-refresh-alert"></i> Recheck</span>`;return c;}
-function renderTable(){
-  const q=(document.getElementById('search').value||'').toLowerCase();
-  const rf=document.getElementById('filter-result').value;
-  const flat=[];
-  records.forEach(rec=>{
-    (rec.rows||[]).forEach(row=>{
-      if(rf&&row.result!==rf)return;
-      if(q&&!(rec.inspector+(row.main||'')+rec.sampling).toLowerCase().includes(q))return;
-      flat.push({rec,row});
-    });
-    if(!(rec.rows||[]).length&&!rf&&(!q||(rec.inspector+rec.sampling).toLowerCase().includes(q)))flat.push({rec,row:{}});
+function calcSieve() {
+  const total = parseFloat(document.getElementById('f-sieve-total').value) || 0;
+  const fields = ['lower','insize','upper','dust'];
+  fields.forEach(f => {
+    const wt  = parseFloat(document.getElementById('f-sieve-'+f+'-wt')?.value) || 0;
+    const pct = document.getElementById('f-sieve-'+f+'-pct');
+    if(pct) pct.value = total > 0 ? ((wt/total)*100).toFixed(2)+'%' : '—';
   });
-  document.getElementById('rec-count').textContent=flat.length;
-  const tbody=document.getElementById('rec-body');
-  if(!flat.length){tbody.innerHTML='';document.getElementById('rec-empty').style.display='block';return;}
-  document.getElementById('rec-empty').style.display='none';
-  let html='',prevId=null;
-  flat.forEach(({rec,row},i)=>{
-    const isNew=prevId!==rec.id;
-    const spec=(row.specMin!==undefined&&(row.specMin||row.specMax))?`${row.specMin}–${row.specMax}`:'—';
-    html+=`<tr>
-      <td style="color:var(--text-ter);font-size:10px;text-align:center">${flat.length-i}</td>
-      <td>${isNew?rec.date:''}</td><td>${isNew?rec.time:''}</td>
-      <td style="font-weight:700">${isNew?rec.inspector:''}</td>
-      <td>${isNew?sBadge(rec.shift):''}</td>
-      <td>${isNew?cBadge(rec.check):''}</td>
-      <td style="font-size:11px">${isNew?(rec.sampling||'—'):''}</td>
-      <td>${row.line||'—'}</td>
-      <td style="font-weight:700">${row.main||'—'}</td>
-      <td style="color:var(--text-sec)">${row.sub||'—'}</td>
-      <td style="font-family:'IBM Plex Mono',monospace;font-size:11px">${row.feedcode||'—'}</td>
-      <td style="font-size:11px">${row.diesize||'—'}</td>
-      <td style="font-family:'IBM Plex Mono',monospace;font-weight:700">${row.sv||'—'}</td>
-      <td style="font-family:'IBM Plex Mono',monospace;font-size:11px">${spec}</td>
-      <td>${bHtml(row.result)}</td>
-      <td>${isNew?`<button class="btn sm danger" onclick="delRec(${rec.id})"><i class="ti ti-trash"></i></button>`:''}</td>
+}
+
+// ===== FORM =====
+function g(id) { return document.getElementById(id).value; }
+
+function selectPurpose(type) {
+  purposeVal = type;
+  document.getElementById('btn-round').className = 'purpose-btn' + (type === 'round' ? ' active-round' : '');
+  document.getElementById('btn-recheck').className = 'purpose-btn' + (type === 'recheck' ? ' active-recheck' : '');
+}
+
+const SAMPLING_TIMES = {
+  P1: ['8.00','10.00','12.00','14.00'],
+  P2: ['16.00','18.00','20.00','22.00'],
+  P3: ['00.00','02.00','04.00','06.00'],
+};
+function updateSamplingTime() {
+  const shift = document.getElementById('f-shift').value;
+  const sel   = document.getElementById('f-time');
+  const times = SAMPLING_TIMES[shift] || [];
+  sel.innerHTML = times.length
+    ? '<option value="">-- Select Time --</option>' + times.map(t=>`<option>${t}</option>`).join('')
+    : '<option value="">-- เลือก Shift ก่อน --</option>';
+}
+
+function toggleOthers() {
+  const val = document.getElementById('f-formula').value;
+  document.getElementById('others-field').style.display = val === 'OTHERS' ? '' : 'none';
+  if (val !== 'OTHERS') document.getElementById('f-formula-others').value = '';
+}
+
+function toggleSamplingOthers() {
+  const val = document.getElementById('f-sampling').value;
+  document.getElementById('sampling-others-field').style.display = val === 'Others' ? '' : 'none';
+  if (val !== 'Others') document.getElementById('f-sampling-others').value = '';
+}
+
+function labToRgb(L, a, b) {
+  let y=(L+16)/116, x=a/500+y, z=y-b/200;
+  x=0.95047*(x*x*x>0.008856?x*x*x:(x-16/116)/7.787);
+  y=1.00000*(y*y*y>0.008856?y*y*y:(y-16/116)/7.787);
+  z=1.08883*(z*z*z>0.008856?z*z*z:(z-16/116)/7.787);
+  let r=x*3.2406+y*-1.5372+z*-0.4986, g=x*-0.9689+y*1.8758+z*0.0415, bv=x*0.0557+y*-0.2040+z*1.0570;
+  r=r>0.0031308?1.055*Math.pow(r,1/2.4)-0.055:12.92*r;
+  g=g>0.0031308?1.055*Math.pow(g,1/2.4)-0.055:12.92*g;
+  bv=bv>0.0031308?1.055*Math.pow(bv,1/2.4)-0.055:12.92*bv;
+  return [Math.round(Math.min(Math.max(r,0),1)*255),Math.round(Math.min(Math.max(g,0),1)*255),Math.round(Math.min(Math.max(bv,0),1)*255)];
+}
+function updateColorPreview() {
+  const L=parseFloat(g('f-color-l')), a=parseFloat(g('f-color-a')), b=parseFloat(g('f-color-b'));
+  const bar=document.getElementById('color-preview-bar'), lbl=document.getElementById('color-preview-label');
+  if(!isNaN(L)&&!isNaN(a)&&!isNaN(b)){
+    const [r,gv,bv]=labToRgb(L,a,b);
+    bar.style.background=`rgb(${r},${gv},${bv})`;
+    const br=(r*299+gv*587+bv*114)/1000;
+    lbl.style.color=br>128?'rgba(0,0,0,0.6)':'rgba(255,255,255,0.85)';
+    lbl.textContent=`L*${L}  a*${a}  b*${b}  →  rgb(${r}, ${gv}, ${bv})`;
+  } else {
+    bar.style.background='var(--bg)'; lbl.style.color='var(--text3)'; lbl.textContent='ตัวอย่างสี (กรอก L* a* b*)';
+  }
+}
+['f-color-l','f-color-a','f-color-b'].forEach(id => { document.getElementById(id).addEventListener('input', updateColorPreview); });
+
+async function saveRecord() {
+  const saved = new Date();
+  const tsStr = saved.toLocaleDateString('th-TH',{day:'2-digit',month:'2-digit',year:'numeric'})+' '+
+                saved.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  const rec = {
+    id: Date.now(),
+    date:g('f-date'), time:g('f-time'), inspector:g('f-inspector'), shift:g('f-shift'),
+    purpose:purposeVal,
+    sampling: g('f-sampling')==='Others' ? (g('f-sampling-others')||'Others') : g('f-sampling'),
+    line:g('f-line'), lot:g('f-lot'), feedcode:g('f-feedcode'), diesize:g('f-diesize'),
+    formula:g('f-formula')==='OTHERS'?(g('f-formula-others')||'OTHERS'):g('f-formula'),
+    subformula:g('f-subformula'),
+    sv:'', cp:g('f-cp'), sinktime:'',
+    svVal: currentFormType==='sv'?g('f-sv'):'',
+    sinktimeVal: currentFormType==='sv'?g('f-sinktime'):'',
+    fat:g('f-fat'), fiber:g('f-fiber'), bulkNir:g('f-bulk-nir'),
+    fatSpecMin: (()=>{ const s=getSpec(g('f-formula')==='OTHERS'?g('f-formula-others'):g('f-formula')); return s?s.fatMin:''; })(),
+    fatSpecMax: (()=>{ const s=getSpec(g('f-formula')==='OTHERS'?g('f-formula-others'):g('f-formula')); return s?s.fatMax:''; })(),
+    fibSpecMax: (()=>{ const s=getSpec(g('f-formula')==='OTHERS'?g('f-formula-others'):g('f-formula')); return s?s.fibMax:''; })(),
+    diameter:'', under:'', insize:'', upper:'',
+    minlen:'', maxlen:'', sdlen:'',
+    colorL:g('f-color-l'), colorA:g('f-color-a'), colorB:g('f-color-b'),
+    colorM:g('f-color-m'), colorMethod:g('f-color-method'),
+    lenLower:g('f-len-lower'), lenInsize:g('f-len-insize'), lenUpper:g('f-len-upper'),
+    lenXbar:g('f-len-xbar'), lenSD:g('f-len-sd'),
+    diaXbar:g('f-dia-xbar'), diaSD:g('f-dia-sd'),
+    bulkDensity:g('f-bulk-density'),
+    sieveTotal:g('f-sieve-total'),
+    sieveLowerSize:g('f-sieve-lower-size'), sieveLowerWt:g('f-sieve-lower-wt'), sieveLowerPct:document.getElementById('f-sieve-lower-pct')?.value||'',
+    sieveInsizeSize:g('f-sieve-insize-size'), sieveInsizeWt:g('f-sieve-insize-wt'), sieveInsizePct:document.getElementById('f-sieve-insize-pct')?.value||'',
+    sieveUpperSize:g('f-sieve-upper-size'), sieveUpperWt:g('f-sieve-upper-wt'), sieveUpperPct:document.getElementById('f-sieve-upper-pct')?.value||'',
+    sieveDustWt:g('f-sieve-dust-wt'), sieveDustPct:document.getElementById('f-sieve-dust-pct')?.value||'',
+    // ส่ง Sizing Spec ไปด้วยเพื่อให้ Apps Script คำนวณ Pass/Fail
+    lowerSpecMax: (()=>{ const s=getSizingSpec(g('f-diesize')); return s?s.lowerMax:''; })(),
+    insizeSpecMin:(()=>{ const s=getSizingSpec(g('f-diesize')); return s?s.insizeMin:''; })(),
+    // ส่ง Spec ไปด้วยเพื่อให้ Apps Script คำนวณ Pass/Fail
+    get cpMin(){ const s=getSpec(this.formula); return s?s.cpMin:''; },
+    get cpMax(){ const s=getSpec(this.formula); return s?s.cpMax:''; },
+    get lMin(){ const s=getSpec(this.formula); return s?s.lMin:''; },
+    get lMax(){ const s=getSpec(this.formula); return s?s.lMax:''; },
+    get mMin(){ const s=getSpec(this.formula); return s?s.mMin:''; },
+    get mMax(){ const s=getSpec(this.formula); return s?s.mMax:''; },
+    savedAt:tsStr
+  };
+  records.unshift(rec);
+  localStorage.setItem('qc_records', JSON.stringify(records));
+  const tsEl=document.getElementById('ts-val'), toast=document.getElementById('success-toast');
+  tsEl.textContent=tsStr; tsEl.classList.add('saved');
+  toast.style.display='block'; toast.style.background='var(--green-light)';
+  toast.style.borderColor='var(--green)'; toast.style.color='var(--green-dark)';
+  toast.textContent='⏳ กำลังบันทึกไปยัง Google Sheets...';
+  try {
+    const iframeName='iframe_'+Date.now();
+    const iframe=document.createElement('iframe'); iframe.name=iframeName; iframe.style.display='none'; document.body.appendChild(iframe);
+    const form=document.createElement('form'); form.method='POST'; form.action=SHEETS_URL; form.target=iframeName; form.style.display='none';
+    const payload = { ...rec, dataType: currentFormType==='sizing' ? 'sizing' : 'quality' };
+    Object.entries(payload).forEach(([k,v])=>{ const i=document.createElement('input'); i.type='hidden'; i.name=k; i.value=v??''; form.appendChild(i); });
+    document.body.appendChild(form); form.submit();
+    setTimeout(()=>{ try{document.body.removeChild(form);}catch(e){} try{document.body.removeChild(iframe);}catch(e){} },3000);
+    toast.textContent='✅ บันทึกสำเร็จ! ข้อมูลส่งไป Google Sheets แล้ว';
+  } catch(err) { toast.textContent='⚠️ บันทึก Local แล้ว แต่เชื่อมต่อ Sheets ไม่ได้'; }
+  setTimeout(()=>{ toast.style.display='none'; }, 5000);
+}
+
+function getActiveParams() {
+  return [...document.querySelectorAll('.chip[data-param].active')].map(c=>c.dataset.param);
+}
+
+function showHideCharts(params) {
+  const map = {
+    sv:     ['chart-card-sv'],
+    cp:     ['chart-card-cp'],
+    sink:   ['chart-card-sink'],
+    sizing: ['chart-card-sizing'],
+    color:  ['chart-card-colorl','chart-card-colora','chart-card-colorb'],
+  };
+  Object.values(map).flat().forEach(id => { const el=document.getElementById(id); if(el) el.style.display='none'; });
+  if(!params.length) {
+    Object.values(map).flat().forEach(id => { const el=document.getElementById(id); if(el) el.style.display=''; });
+  } else {
+    params.forEach(p => { (map[p]||[]).forEach(id => { const el=document.getElementById(id); if(el) el.style.display=''; }); });
+  }
+  const fc=document.getElementById('chart-card-feedcode'); if(fc) fc.style.display='';
+}
+
+function toggleParam(el) { el.classList.toggle('active'); renderDashboard(); }
+
+function updateSizingPF() {
+  const dieSize = g('f-diesize');
+  const szp = getSizingSpec(dieSize);
+  const bar = document.getElementById('sizing-spec-bar');
+  if(bar) {
+    bar.innerHTML = szp
+      ? `Spec — %Lower ≤ <strong>${szp.lowerMax}</strong> &nbsp;|&nbsp; %Insize ≥ <strong>${szp.insizeMin}</strong>`
+      : 'เลือก Die Size เพื่อดู Spec';
+  }
+  const el = id => document.getElementById(id);
+  if(el('pf-lower'))  el('pf-lower').innerHTML  = szp ? pfBadge(g('f-len-lower'),  '', szp.lowerMax)   : '';
+  if(el('pf-insize')) el('pf-insize').innerHTML = szp ? pfBadge(g('f-len-insize'), szp.insizeMin, '')   : '';
+}
+
+function pfBadge(val, min, max) {
+  const v = parseFloat(val);
+  if (isNaN(v) || val === '') return '';
+  const mn = parseFloat(min), mx = parseFloat(max);
+  const pass = (isNaN(mn)||v>=mn) && (isNaN(mx)||v<=mx);
+  return pass
+    ? '<span style="background:var(--green-light);color:var(--green-dark);padding:2px 7px;border-radius:20px;font-size:11px;font-weight:600;">✅ PASS</span>'
+    : '<span style="background:var(--red-light);color:var(--red-dark);padding:2px 7px;border-radius:20px;font-size:11px;font-weight:600;">❌ FAIL</span>';
+}
+
+function updateFormPF() {
+  const formula = g('f-formula') === 'OTHERS' ? g('f-formula-others') : g('f-formula');
+  const sp = getSpec(formula);
+  if (!sp) {
+    ['pf-m','pf-cp','pf-fat','pf-fiber','pf-l'].forEach(id => {
+      const el = document.getElementById(id); if(el) el.innerHTML = '';
+    });
+    return;
+  }
+  const el = id => document.getElementById(id);
+  if(el('pf-m'))     el('pf-m').innerHTML     = pfBadge(g('f-color-m'), sp.mMin,   sp.mMax);
+  if(el('pf-cp'))    el('pf-cp').innerHTML    = pfBadge(g('f-cp'),      sp.cpMin,  sp.cpMax);
+  if(el('pf-fat'))   el('pf-fat').innerHTML   = pfBadge(g('f-fat'),     sp.fatMin, sp.fatMax);
+  if(el('pf-fiber')) el('pf-fiber').innerHTML = pfBadge(g('f-fiber'),   '',        sp.fibMax);
+  if(el('pf-l'))     el('pf-l').innerHTML     = pfBadge(g('f-color-l'), sp.lMin,   sp.lMax);
+}
+
+// ===== DASHBOARD =====
+function getChipVals(group) { return [...document.querySelectorAll(`.chip[data-group="${group}"].active`)].map(c=>c.dataset.val); }
+function toggleChip(el) { el.classList.toggle('active'); renderDashboard(); }
+
+function populateFeedcodeDropdown() {
+  const sel = document.getElementById('dd-feedcode'); if(!sel) return;
+  const cur = sel.value;
+  const codes = [...new Set(records.map(r=>r.feedcode).filter(Boolean))].sort();
+  sel.innerHTML = '<option value="">ทุก Feed Code</option>' + codes.map(c=>`<option${c===cur?' selected':''}>${c}</option>`).join('');
+}
+
+function clearDashFilters() {
+  ['dd-line','dd-shift','dd-mainformula','dd-subformula','dd-feedcode','dash-date-from','dash-date-to'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.value='';
+  });
+  renderDashboard();
+}
+
+function getDashFiltered() {
+  const fLine  = document.getElementById('dd-line').value;
+  const fShift = document.getElementById('dd-shift').value;
+  const fMF    = document.getElementById('dd-mainformula').value;
+  const fSF    = document.getElementById('dd-subformula').value;
+  const fFC    = document.getElementById('dd-feedcode').value;
+  const fFrom  = document.getElementById('dash-date-from').value;
+  const fTo    = document.getElementById('dash-date-to').value;
+  return records.filter(r=>
+    (!fLine  || r.line === fLine) &&
+    (!fShift || r.shift === fShift) &&
+    (!fMF    || r.formula === fMF) &&
+    (!fSF    || r.subformula === fSF) &&
+    (!fFC    || r.feedcode === fFC) &&
+    (!fFrom  || r.date >= fFrom) &&
+    (!fTo    || r.date <= fTo)
+  );
+}
+
+function populateFeedcodeChips() {
+  const row=document.getElementById('chips-feedcode'); if(!row) return;
+  const active=getChipVals('feedcode');
+  const codes=[...new Set(records.map(r=>r.feedcode).filter(Boolean))].sort();
+  row.innerHTML=codes.map(c=>`<span class="chip${active.includes(c)?' active':''}" data-group="feedcode" data-val="${c}" onclick="toggleChip(this)">${c}</span>`).join('');
+}
+
+function clearDashFilters() {
+  document.querySelectorAll('.chip.active').forEach(c=>c.classList.remove('active'));
+  document.getElementById('dash-date-from').value=''; document.getElementById('dash-date-to').value='';
+  ['dd-sv','dd-cp','dd-sink','dd-sizing','dd-color'].forEach(id=>document.getElementById(id).value='');
+  renderDashboard();
+}
+
+function avg(arr) { const n=arr.map(v=>parseFloat(v)).filter(v=>!isNaN(v)&&v!==0); return n.length?(n.reduce((a,b)=>a+b,0)/n.length).toFixed(2):'-'; }
+
+function renderDashboard() {
+  populateFeedcodeDropdown();
+  const data=getDashFiltered();
+  const params=getActiveParams();
+  showHideCharts(params);
+  const fLine=document.getElementById('dd-line').value, fShift=document.getElementById('dd-shift').value;
+  const fMF=document.getElementById('dd-mainformula').value, fSF=document.getElementById('dd-subformula').value;
+  const fFC=document.getElementById('dd-feedcode').value;
+  const fFrom=document.getElementById('dash-date-from').value, fTo=document.getElementById('dash-date-to').value;
+  const dateRange = fFrom && fTo ? fFrom+' ถึง '+fTo : fFrom || fTo;
+  const parts=[fLine,fShift,fMF,fSF,fFC,dateRange].filter(Boolean);
+  document.getElementById('dash-filter-label').textContent=parts.length?'กรองโดย: '+parts.join(' | '):'แสดงข้อมูลทั้งหมด';
+  const total=data.length, rounds=data.filter(r=>r.purpose==='round').length, rechecks=data.filter(r=>r.purpose==='recheck').length;
+  const todayStr=new Date().toISOString().split('T')[0], todayCount=data.filter(r=>r.date===todayStr).length;
+  document.getElementById('stats-grid').innerHTML=`
+    <div class="stat-card green"><div class="stat-label">รายการที่กรอง</div><div class="stat-value">${total}</div><div class="stat-sub">จากทั้งหมด ${records.length}</div></div>
+    <div class="stat-card blue"><div class="stat-label">วันนี้</div><div class="stat-value">${todayCount}</div><div class="stat-sub">รายการ</div></div>
+    <div class="stat-card"><div class="stat-label">ตามรอบ</div><div class="stat-value">${rounds}</div><div class="stat-sub">รายการ</div></div>
+    <div class="stat-card red"><div class="stat-label">Recheck</div><div class="stat-value">${rechecks}</div><div class="stat-sub">รายการ</div></div>`;
+
+  // Line summary table
+  const groupMap={};
+  data.forEach(r=>{ const k=(r.line||'-')+'||'+(r.feedcode||'-'); if(!groupMap[k]) groupMap[k]={line:r.line||'-',fc:r.feedcode||'-',items:[]}; groupMap[k].items.push(r); });
+  const groups=Object.values(groupMap).sort((a,b)=>a.line.localeCompare(b.line)||a.fc.localeCompare(b.fc));
+  const tb2=document.getElementById('line-summary-body');
+  if(!groups.length){ tb2.innerHTML='<tr><td colspan="8"><div class="empty-state"><div class="icon">📭</div>ยังไม่มีข้อมูล</div></td></tr>'; }
+  else { tb2.innerHTML=groups.map(g=>`<tr><td><strong>${g.line}</strong></td><td>${g.fc}</td><td><span class="badge badge-round">${g.items.length}</span></td><td>${g.items.filter(r=>r.purpose==='round').length}</td><td>${g.items.filter(r=>r.purpose==='recheck').length}</td><td>${avg(g.items.map(r=>r.sv))}</td><td>${avg(g.items.map(r=>r.cp))}</td><td>${avg(g.items.map(r=>r.sinktime))}</td></tr>`).join(''); }
+
+  // Sizing % stacked bar
+  const sizingLines=['Line 1','Line 2','Line 3','Line 4','Line 5','Line 6','Line 7','Line 8'].filter(l=>data.some(r=>r.line===l));
+  function sizePct(ld){ let su=0,si=0,sp=0; ld.forEach(r=>{su+=parseFloat(r.under)||0;si+=parseFloat(r.insize)||0;sp+=parseFloat(r.upper)||0;}); const t=su+si+sp; if(!t) return{under:0,insize:0,upper:0}; return{under:parseFloat(((su/t)*100).toFixed(1)),insize:parseFloat(((si/t)*100).toFixed(1)),upper:parseFloat(((sp/t)*100).toFixed(1))}; }
+  const szData=sizingLines.map(l=>sizePct(data.filter(r=>r.line===l)));
+  drawChart('chart-sizing-pct','bar',sizingLines,[
+    {label:'% Under',data:szData.map(d=>d.under),backgroundColor:'rgba(216,90,48,0.85)',borderColor:'#D85A30',borderWidth:1},
+    {label:'% Insize',data:szData.map(d=>d.insize),backgroundColor:'rgba(29,158,117,0.85)',borderColor:'#1D9E75',borderWidth:1},
+    {label:'% Upper',data:szData.map(d=>d.upper),backgroundColor:'rgba(55,138,221,0.85)',borderColor:'#378ADD',borderWidth:1},
+  ],{plugins:{legend:{display:true,position:'bottom',labels:{font:{size:12}}}},scales:{x:{stacked:true,grid:{display:false}},y:{stacked:true,min:0,max:100,ticks:{callback:v=>v+'%'}}}});
+
+  const dateKeys=[...new Set(data.map(r=>r.date))].sort();
+  const feedcodes=[...new Set(data.map(r=>r.feedcode).filter(Boolean))].sort();
+  drawChart('chart-feedcode','line',dateKeys,feedcodes.map((fc,i)=>({label:fc,data:dateKeys.map(d=>data.filter(r=>r.date===d&&r.feedcode===fc).length),borderColor:FC_COLORS[i%FC_COLORS.length],backgroundColor:'transparent',tension:0.3,pointRadius:3,fill:false})),{plugins:{legend:{display:true,position:'bottom',labels:{font:{size:11}}}}});
+  const last20=[...data].reverse().slice(-20);
+  drawChart('chart-sv','line',last20.map(r=>r.time||r.date),[{label:'SV',data:last20.map(r=>parseFloat(r.sv)||null),borderColor:'#378ADD',backgroundColor:'rgba(55,138,221,0.1)',tension:0.3,fill:true,pointRadius:3}]);
+  drawChart('chart-cp','line',last20.map(r=>r.time||r.date),[{label:'CP',data:last20.map(r=>parseFloat(r.cp)||null),borderColor:'#534AB7',backgroundColor:'rgba(83,74,183,0.1)',tension:0.3,fill:true,pointRadius:3}]);
+  drawChart('chart-sink','line',last20.map(r=>r.time||r.date),[{label:'Sinking Time',data:last20.map(r=>parseFloat(r.sinktime)||null),borderColor:'#BA7517',backgroundColor:'rgba(186,117,23,0.1)',tension:0.3,fill:true,pointRadius:3}]);
+  drawChart('chart-colorl','line',last20.map(r=>r.time||r.date),[{label:'L*',data:last20.map(r=>parseFloat(r.colorL)||null),borderColor:'#555',backgroundColor:'rgba(85,85,85,0.1)',tension:0.3,fill:true,pointRadius:3}]);
+  drawChart('chart-colora','line',last20.map(r=>r.time||r.date),[{label:'a*',data:last20.map(r=>parseFloat(r.colorA)||null),borderColor:'#C0392B',backgroundColor:'rgba(192,57,43,0.1)',tension:0.3,fill:true,pointRadius:3}]);
+  drawChart('chart-colorb','line',last20.map(r=>r.time||r.date),[{label:'b*',data:last20.map(r=>parseFloat(r.colorB)||null),borderColor:'#2471A3',backgroundColor:'rgba(36,113,163,0.1)',tension:0.3,fill:true,pointRadius:3}]);
+}
+
+function drawChart(id,type,labels,datasets,extraOpts={}) {
+  if(charts[id]) charts[id].destroy();
+  const ctx=document.getElementById(id); if(!ctx) return;
+  charts[id]=new Chart(ctx,{type,data:{labels,datasets},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:type==='doughnut',labels:{font:{size:12}}}},scales:type==='doughnut'?{}:{x:{ticks:{font:{size:10},maxRotation:45},grid:{display:false}},y:{ticks:{font:{size:11}},grid:{color:'rgba(0,0,0,0.05)'}}}, ...extraOpts}});
+}
+
+// ===== SV ENTRY PAGE =====
+const SV_SPEC_TABLE = {
+  '701'   :{ svMin:70, svMax:110, stMax:25 },
+  '901'   :{ svMin:70, svMax:110, stMax:25 },
+  'POLY'  :{ svMin:80, svMax:120, stMax:25 },
+  'MS3618':{ svMin:70, svMax:110, stMax:25 },
+  'MS9123':{ svMin:70, svMax:110, stMax:25 },
+  'TNT'   :{ svMin:70, svMax:110, stMax:25 },
+  'BROODS':{ svMin:70, svMax:110, stMax:25 },
+  'NF'    :{ svMin:70, svMax:110, stMax:25 },
+};
+let svRows = [];
+let svCheckType = '';
+
+function selectSVCheck(type) {
+  svCheckType = type;
+  const btnR = document.getElementById('sv-check-round');
+  const btnC = document.getElementById('sv-check-recheck');
+  if(btnR) {
+    btnR.style.background  = type==='round' ? 'var(--blue-light)' : 'var(--surface)';
+    btnR.style.borderColor = type==='round' ? '#1a3a8f' : 'var(--border)';
+    btnR.querySelector('span').style.color = type==='round' ? '#1a3a8f' : 'var(--text2)';
+  }
+  if(btnC) {
+    btnC.style.background  = type==='recheck' ? 'var(--purple-light)' : 'var(--surface)';
+    btnC.style.borderColor = type==='recheck' ? '#534AB7' : 'var(--border)';
+    btnC.querySelector('span').style.color = type==='recheck' ? '#534AB7' : 'var(--text2)';
+  }
+}
+
+function updateSVSamplingTime() {
+  const shift = document.getElementById('sv-entry-shift').value;
+  const sel   = document.getElementById('sv-entry-time');
+  const times = SAMPLING_TIMES[shift] || [];
+  sel.innerHTML = times.length
+    ? '<option value="">-- Select Time --</option>' + times.map(t=>`<option>${t}</option>`).join('')
+    : '<option value="">-- เลือก Shift ก่อน --</option>';
+}
+
+function renderSVEntryPage() {
+  syncInspectorDropdown();
+  renderSVRows();
+}
+
+function renderSVRows() {
+  const tbody = document.getElementById('sv-entry-tbody');
+  if (!tbody) return;
+  if (!svRows.length) addSVRow();
+  tbody.innerHTML = svRows.map((r, i) => {
+    const sp = SV_SPEC_TABLE[r.formula] || null;
+    const svMin = sp ? sp.svMin : '—';
+    const svMax = sp ? sp.svMax : '—';
+    const stMax = sp ? sp.stMax : '—';
+    const svVal = parseFloat(r.sv);
+    const stVal = parseFloat(r.st);
+    const svRes = sp && !isNaN(svVal) ? (svVal>=sp.svMin&&svVal<=sp.svMax?'<span style="color:#0F6E56;font-weight:600;">PASS</span>':'<span style="color:#993C1D;font-weight:600;">FAIL</span>') : '—';
+    const stRes = sp && !isNaN(stVal) ? (stVal<=sp.stMax?'<span style="color:#0F6E56;font-weight:600;">PASS</span>':'<span style="color:#993C1D;font-weight:600;">FAIL</span>') : '—';
+    const sel = (id,opts,val) => `<select onchange="updateSVRow(${i},'${id}',this.value)" style="width:100%;border:1px solid var(--border);border-radius:4px;padding:5px 4px;font-size:12px;font-family:inherit;background:var(--surface);color:var(--text);outline:none;">${opts.map(o=>`<option${o===val?' selected':''}>${o}</option>`).join('')}</select>`;
+    const inp = (id,val,type='text',step='') => `<input type="${type}" value="${val}" step="${step}" onchange="updateSVRow(${i},'${id}',this.value)" style="width:100%;border:1px solid var(--border);border-radius:4px;padding:5px 6px;font-size:12px;font-family:monospace;background:var(--surface);color:var(--text);outline:none;text-align:center;" />`;
+    return `<tr style="border-bottom:1px solid var(--border);">
+      <td style="padding:6px;text-align:center;"><button onclick="removeSVRow(${i})" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:14px;padding:2px 4px;">✕</button></td>
+      <td style="padding:4px;">${sel('line',['—','Line 1','Line 2','Line 3','Line 4','Line 5','Line 6','Line 7','Line 8','C1','C2','C3','C4'],r.line||'—')}</td>
+      <td style="padding:4px;">${sel('formula',['—','701','901','POLY','97LC','MS9123','MS3618','BROODS','TNT','OTHERS'],r.formula||'—')}</td>
+      <td style="padding:4px;">${sel('subformula',['None','P','S','G','NK','B1','B2','B3'],r.subformula||'None')}</td>
+      <td style="padding:4px;"><input type="text" value="${r.feedcode||''}" onchange="updateSVRow(${i},'feedcode',this.value)" placeholder="Feed Code" style="width:100%;border:1px solid var(--border);border-radius:4px;padding:5px 6px;font-size:12px;font-family:inherit;background:var(--surface);color:var(--text);outline:none;" /></td>
+      <td style="padding:4px;">${sel('diesize',['—','1.0','1.2','1.4','1.7','2.0','2.3','Crumble'],r.diesize||'—')}</td>
+      <td style="padding:4px;">${inp('sv',r.sv||'','number','0.01')}</td>
+      <td style="padding:6px;text-align:center;color:var(--text2);">${svMin}</td>
+      <td style="padding:6px;text-align:center;color:var(--text2);">${svMax}</td>
+      <td style="padding:6px;text-align:center;">${svRes}</td>
+      <td style="padding:4px;">${inp('st',r.st||'','number','1')}</td>
+      <td style="padding:6px;text-align:center;color:var(--text2);">${stMax}</td>
+      <td style="padding:6px;text-align:center;">${stRes}</td>
     </tr>`;
-    if(i<flat.length-1&&flat[i+1].rec.id!==rec.id)html+=`<tr><td colspan="16" style="padding:0;height:3px;background:var(--bg)"></td></tr>`;
-    prevId=rec.id;
+  }).join('');
+}
+
+function updateSVRow(i, key, val) {
+  svRows[i][key] = val;
+  renderSVRows();
+}
+function addSVRow() { svRows.push({line:'—',formula:'—',subformula:'None',feedcode:'',diesize:'—',sv:'',st:''}); renderSVRows(); }
+function removeSVRow(i) { svRows.splice(i,1); if(!svRows.length) addSVRow(); else renderSVRows(); }
+
+function saveSVRows() {
+  const saved = new Date();
+  const tsStr = saved.toLocaleDateString('th-TH',{day:'2-digit',month:'2-digit',year:'numeric'})+' '+saved.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  const date    = document.getElementById('sv-entry-date').value;
+  const shift   = document.getElementById('sv-entry-shift').value;
+  const time    = document.getElementById('sv-entry-time').value;
+  const insp    = document.getElementById('sv-entry-inspector').value;
+  svRows.filter(r=>r.sv||r.st).forEach(r => {
+    const sp = SV_SPEC_TABLE[r.formula]||null;
+    const rec = { id:Date.now()+Math.random(), date, time, inspector:insp, shift,
+      line:r.line, formula:r.formula, subformula:r.subformula, feedcode:r.feedcode, diesize:r.diesize,
+      sv:r.sv, st:r.st,
+      svSpecMin:sp?sp.svMin:'', svSpecMax:sp?sp.svMax:'',
+      svResult:sp&&r.sv?(parseFloat(r.sv)>=sp.svMin&&parseFloat(r.sv)<=sp.svMax?'PASS':'FAIL'):'',
+      stSpecMax:sp?sp.stMax:'',
+      stResult:sp&&r.st?(parseFloat(r.st)<=sp.stMax?'PASS':'FAIL'):'',
+      savedAt:tsStr, purpose:'sv', sampling:'', lot:'', colorMethod:'',
+      cp:'', fat:'', fiber:'', colorM:'', colorL:'', colorA:'', colorB:'',
+    };
+    records.unshift(rec);
+    // send to Google Sheets
+    const iframeName='sv_iframe_'+Date.now()+Math.random();
+    const iframe=document.createElement('iframe'); iframe.name=iframeName; iframe.style.display='none'; document.body.appendChild(iframe);
+    const form=document.createElement('form'); form.method='POST'; form.action=SHEETS_URL; form.target=iframeName; form.style.display='none';
+    Object.entries({...rec,dataType:'sv'}).forEach(([k,v])=>{const inp=document.createElement('input');inp.type='hidden';inp.name=k;inp.value=v??'';form.appendChild(inp);});
+    document.body.appendChild(form); form.submit();
+    setTimeout(()=>{try{document.body.removeChild(form);}catch(e){} try{document.body.removeChild(iframe);}catch(e){}},3000);
   });
-  tbody.innerHTML=html;
-}
-async function delRec(id){
-  records=records.filter(r=>r.id!==id);saveLocal();renderTable();
-  try{await gsCall({action:'delete',id:String(id)});toast('ลบจาก Google Sheet แล้ว','ok');}
-  catch(e){toast('ลบ Local แล้ว (Sheet: '+e.message+')','err');}
+  localStorage.setItem('qc_records',JSON.stringify(records));
+  svRows=[]; addSVRow();
+  alert('✅ บันทึกสำเร็จ '+records.filter(r=>r.purpose==='sv').length+' รายการ');
 }
 
-// SPEC
-function renderSpecPage(){
-  document.getElementById('spec-tbody').innerHTML=specs.map((s,i)=>`
-    <tr>
-      <td style="font-weight:700">${s.main}</td>
-      <td style="color:var(--text-sec)">${s.sub||'—'}</td>
-      <td style="text-align:center"><input class="sinput" type="number" value="${s.min}" onchange="specs[${i}].min=parseFloat(this.value)||0;saveLocal()"></td>
-      <td style="text-align:center"><input class="sinput" type="number" value="${s.max}" onchange="specs[${i}].max=parseFloat(this.value)||0;saveLocal()"></td>
-      <td style="text-align:center"><button class="btn sm danger" onclick="specs.splice(${i},1);saveLocal();renderSpecPage()"><i class="ti ti-trash"></i></button></td>
+// ===== SPEC CHECK HELPERS =====
+function getSpec(formula) { return controlSpec.find(s=>s.formula===formula) || null; }
+function pf(val, min, max) {
+  const v = parseFloat(val);
+  if (isNaN(v) || val==='' || val===undefined || val===null) return '<span style="color:var(--text3);font-size:11px;">—</span>';
+  const mn = parseFloat(min), mx = parseFloat(max);
+  const pass = (isNaN(mn)||v>=mn) && (isNaN(mx)||v<=mx);
+  return pass
+    ? '<span style="background:var(--green-light);color:var(--green-dark);padding:2px 6px;border-radius:20px;font-size:10px;font-weight:600;">✅ PASS</span>'
+    : '<span style="background:var(--red-light);color:var(--red-dark);padding:2px 6px;border-radius:20px;font-size:10px;font-weight:600;">❌ FAIL</span>';
+}
+
+// ===== RECORDS TABLE =====
+function renderTable() {
+  const fShift=document.getElementById('filter-shift').value, fLine=document.getElementById('filter-line').value;
+  const fPurpose=document.getElementById('filter-purpose').value, fDate=document.getElementById('filter-date').value;
+  const filtered=records.filter(r=>(!fShift||r.shift===fShift)&&(!fLine||r.line===fLine)&&(!fPurpose||r.purpose===fPurpose)&&(!fDate||r.date===fDate));
+  document.getElementById('rec-count').textContent=filtered.length+' รายการ';
+  const tbody=document.getElementById('table-body');
+  if(!filtered.length){ tbody.innerHTML='<tr><td colspan="23"><div class="empty-state"><div class="icon">📭</div>ยังไม่มีข้อมูล</div></td></tr>'; return; }
+
+  tbody.innerHTML=filtered.map((r,i)=>{
+    const sp  = getSpec(r.formula||'');
+    const szp = getSizingSpec(r.diesize||'');
+    const cpPF    = sp  ? pf(r.cp,       sp.cpMin,      sp.cpMax)      : '—';
+    const lPF     = sp  ? pf(r.colorL,   sp.lMin,       sp.lMax)       : '—';
+    const mPF     = sp  ? pf(r.colorM,   sp.mMin,       sp.mMax)       : '—';
+    const fatPF   = sp  ? pf(r.fat,      sp.fatMin,     sp.fatMax)     : '—';
+    const fibPF   = sp  ? pf(r.fiber,    '',            sp.fibMax)     : '—';
+    const lowerPF = szp ? pf(r.lenLower, '',            szp.lowerMax)  : '—';
+    const insizePF= szp ? pf(r.lenInsize,szp.insizeMin, '')            : '—';
+    return `<tr>
+    <td>${filtered.length-i}</td><td>${r.date}</td><td>${r.time}</td><td>${r.inspector}</td><td>${r.shift}</td>
+    <td>${r.colorMethod||''}</td>
+    <td><span class="badge badge-${r.purpose}">${r.purpose==='round'?'ตามรอบ':'Recheck'}</span></td>
+    <td>${r.sampling}</td><td>${r.line}</td>
+    <td>${r.diesize}</td><td>${r.formula||''}</td><td>${r.subformula||''}</td><td>${r.feedcode}</td><td>${r.lot}</td>
+    <td>${r.colorM||''} ${mPF}</td>
+    <td>${r.cp} ${cpPF}</td>
+    <td>${r.fat||''} ${fatPF}</td><td>${r.fiber||''} ${fibPF}</td>
+    <td>${r.colorL||''} ${lPF}</td><td>${r.colorA||''}</td><td>${r.colorB||''}</td>
+    <td>${r.lenLower||''} ${lowerPF}</td><td>${r.lenInsize||''} ${insizePF}</td><td>${r.lenUpper||''}</td><td>${r.lenXbar||''}</td><td>${r.lenSD||''}</td>
+    <td>${r.diaXbar||''}</td><td>${r.diaSD||''}</td>
+    <td style="font-size:11px;color:var(--text3);">${r.savedAt}</td>
+    <td><button class="del-btn" onclick="deleteRecord(${r.id})">🗑</button></td>
+  </tr>`;
+  }).join('');
+}
+function deleteRecord(id){ if(!confirm('ต้องการลบรายการนี้?')) return; records=records.filter(r=>r.id!==id); localStorage.setItem('qc_records',JSON.stringify(records)); renderTable(); }
+function clearFilters(){ ['filter-shift','filter-line','filter-purpose','filter-date'].forEach(id=>document.getElementById(id).value=''); renderTable(); }
+
+function checkSpecVal(val, min, max) {
+  const v=parseFloat(val); if(isNaN(v)) return '-';
+  const mn=parseFloat(min), mx=parseFloat(max);
+  if(!isNaN(mn)&&v<mn) return 'FAIL';
+  if(!isNaN(mx)&&v>mx) return 'FAIL';
+  return 'PASS';
+}
+
+// ===== EXPORT EXCEL =====
+function exportExcel() {
+  if(!records.length){ alert('ไม่มีข้อมูลสำหรับ Export'); return; }
+  const headers=['#','วันที่','Sampling Time','Inspector','Shift','Method','Check','Sampling','LINE','Die Size','Main Formula','Sub Formula','Feed Code','Lot','%M','%M Result','CP','CP Result','FAT','Fiber','L*','L* Result','a*','b*','%Lower(L)','%Insize(L)','%Upper(L)','Xbar(L)','SD(L)','Xbar(D)','SD(D)','บันทึกเมื่อ'];
+  const rows=records.map((r,i)=>{
+    const sp=getSpec(r.formula||'');
+    return [i+1,r.date,r.time,r.inspector,r.shift,r.colorMethod||'',r.purpose==='round'?'ตามรอบ':'Recheck',r.sampling,r.line,r.diesize,r.formula||'',r.subformula||'',r.feedcode,r.lot,
+      r.colorM||'', sp?checkSpecVal(r.colorM,sp.mMin,sp.mMax):'',
+      r.cp,         sp?checkSpecVal(r.cp,sp.cpMin,sp.cpMax):'',
+      r.fat||'',r.fiber||'',
+      r.colorL||'', sp?checkSpecVal(r.colorL,sp.lMin,sp.lMax):'',
+      r.colorA||'',r.colorB||'',
+      r.lenLower||'',r.lenInsize||'',r.lenUpper||'',r.lenXbar||'',r.lenSD||'',
+      r.diaXbar||'',r.diaSD||'',r.savedAt];
+  });
+  const ws=XLSX.utils.aoa_to_sheet([headers,...rows]); ws['!cols']=headers.map(()=>({wch:14}));
+  const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'QC Inspection');
+  const sumRows=[['QC Inspection Summary'],[''],['รายการทั้งหมด',records.length],['ตามรอบ',records.filter(r=>r.purpose==='round').length],['Recheck',records.filter(r=>r.purpose==='recheck').length],['Export เมื่อ',new Date().toLocaleString('th-TH')]];
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(sumRows),'Summary');
+  const d=new Date(); XLSX.writeFile(wb,`QC_Inspection_${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}.xlsx`);
+}
+
+function goToSpec() {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-spec').classList.add('active');
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  renderSpecPage();
+}
+
+// ===== CONTROL PAGE =====
+function renderControlPage() {
+  const tbody = document.getElementById('control-tbody');
+  if (!tbody) return;
+  tbody.innerHTML = controlSpec.map((s, i) => {
+    const inp = (key, val) => `<input type="number" value="${val??''}" step="0.1"
+      onchange="controlSpec[${i}]['${key}']=this.value===''?'':parseFloat(this.value)"
+      style="width:68px;border:1px solid var(--border);border-radius:var(--radius-sm);padding:6px 6px;font-size:12px;font-family:inherit;text-align:center;outline:none;"
+      onfocus="this.style.borderColor='var(--green)'" onblur="this.style.borderColor='var(--border)'" />`;
+    return `<tr style="border-bottom:1px solid var(--border);">
+      <td style="padding:10px 12px;font-weight:600;white-space:nowrap;">${s.formula}</td>
+      <td style="padding:6px 6px;text-align:center;">${inp('mMin',   s.mMin)}</td>
+      <td style="padding:6px 6px;text-align:center;">${inp('mMax',   s.mMax)}</td>
+      <td style="padding:6px 6px;text-align:center;">${inp('cpMin',  s.cpMin)}</td>
+      <td style="padding:6px 6px;text-align:center;">${inp('cpMax',  s.cpMax)}</td>
+      <td style="padding:6px 6px;text-align:center;">${inp('fatMin', s.fatMin)}</td>
+      <td style="padding:6px 6px;text-align:center;">${inp('fatMax', s.fatMax)}</td>
+      <td style="padding:6px 6px;text-align:center;">${inp('fibMax', s.fibMax)}</td>
+      <td style="padding:6px 6px;text-align:center;">${inp('lMin',   s.lMin)}</td>
+      <td style="padding:6px 6px;text-align:center;">${inp('lMax',   s.lMax)}</td>
+    </tr>`;
+  }).join('');
+}
+
+function saveControlSpec() {
+  localStorage.setItem('qc_control_spec', JSON.stringify(controlSpec));
+  const btn = event.target;
+  btn.textContent = '✅ บันทึกแล้ว!';
+  setTimeout(() => { btn.textContent = '💾 บันทึก Spec'; }, 2000);
+}
+
+// ===== SPEC PAGE =====
+const DEFAULT_SPEC_SV = [
+  {formula:'701',  sub:'P',  svMin:70, svMax:110},
+  {formula:'901',  sub:'S',  svMin:70, svMax:110},
+  {formula:'POLY', sub:'G',  svMin:80, svMax:120},
+  {formula:'MS3618',sub:'NK',svMin:0,  svMax:0},
+  {formula:'MS9123',sub:'B1',svMin:0,  svMax:0},
+  {formula:'TNT',  sub:'B2', svMin:0,  svMax:0},
+  {formula:'BROODS',sub:'B3',svMin:0,  svMax:0},
+  {formula:'NF',   sub:'—',  svMin:0,  svMax:0},
+];
+const DEFAULT_SPEC_ST = [
+  {dieSize:'1.0',stMax:25},{dieSize:'1.2',stMax:25},
+  {dieSize:'1.4',stMax:25},{dieSize:'1.7',stMax:25},
+  {dieSize:'2.0',stMax:25},{dieSize:'2.3',stMax:25},
+];
+const DEFAULT_SPEC_CHEM = [
+  {formula:'701',   mMin:9.5,mMax:10.8,cpMin:36,cpMax:37,fatMin:'',fatMax:'',fibMin:'',fibMax:'',lMin:32,lMax:34},
+  {formula:'901',   mMin:9.5,mMax:10.8,cpMin:38,cpMax:39,fatMin:'',fatMax:'',fibMin:'',fibMax:'',lMin:32,lMax:34},
+  {formula:'POLY',  mMin:9.5,mMax:10.8,cpMin:38,cpMax:39,fatMin:'',fatMax:'',fibMin:'',fibMax:'',lMin:32,lMax:34},
+  {formula:'MS3618',mMin:9.5,mMax:10.8,cpMin:40,cpMax:41,fatMin:'',fatMax:'',fibMin:'',fibMax:'',lMin:32,lMax:34},
+  {formula:'MS9123',mMin:9.5,mMax:10.8,cpMin:32,cpMax:33,fatMin:'',fatMax:'',fibMin:'',fibMax:'',lMin:32,lMax:34},
+  {formula:'TNT',   mMin:9.5,mMax:10.8,cpMin:40,cpMax:41,fatMin:'',fatMax:'',fibMin:'',fibMax:'',lMin:32,lMax:34},
+  {formula:'BROODS',mMin:9.5,mMax:10.8,cpMin:40,cpMax:41,fatMin:'',fatMax:'',fibMin:'',fibMax:'',lMin:32,lMax:34},
+  {formula:'NF',    mMin:9.5,mMax:10.8,cpMin:36,cpMax:37,fatMin:'',fatMax:'',fibMin:'',fibMax:'',lMin:32,lMax:34},
+];
+
+let specSV   = JSON.parse(localStorage.getItem('qc_spec_sv')   || 'null') || DEFAULT_SPEC_SV.map(r=>({...r}));
+let specST   = JSON.parse(localStorage.getItem('qc_spec_st')   || 'null') || DEFAULT_SPEC_ST.map(r=>({...r}));
+let specChem = JSON.parse(localStorage.getItem('qc_spec_chem') || 'null') || DEFAULT_SPEC_CHEM.map(r=>({...r}));
+
+function specInp(val, onchange, w='75px') {
+  return `<input type="number" value="${val??''}" step="0.1" oninput="${onchange}" style="width:${w};border:1px solid var(--border);border-radius:var(--radius-sm);padding:7px 8px;font-size:13px;text-align:center;font-family:inherit;outline:none;" onfocus="this.style.borderColor='var(--green)'" onblur="this.style.borderColor='var(--border)'" />`;
+}
+function specDelBtn(fn) {
+  return `<button onclick="${fn}" style="background:none;border:1px solid var(--red-light);border-radius:var(--radius-sm);color:var(--red);cursor:pointer;padding:6px 10px;font-size:13px;">🗑</button>`;
+}
+
+function renderSpecSV() {
+  const tb = document.getElementById('spec-sv-tbody'); if(!tb) return;
+  tb.innerHTML = specSV.map((r,i)=>`
+    <tr style="border-bottom:1px solid var(--border);">
+      <td style="padding:10px 16px;font-weight:600;">${r.formula}</td>
+      <td style="padding:10px 16px;color:var(--text2);">${r.sub}</td>
+      <td style="padding:8px 12px;text-align:center;">${specInp(r.svMin,`specSV[${i}].svMin=parseFloat(this.value)`)}</td>
+      <td style="padding:8px 12px;text-align:center;">${specInp(r.svMax,`specSV[${i}].svMax=parseFloat(this.value)`)}</td>
+      <td style="padding:8px 12px;text-align:center;">${specDelBtn(`specSV.splice(${i},1);renderSpecSV()`)}</td>
     </tr>`).join('');
-  const nm=document.getElementById('new-main');
-  nm.innerHTML='<option value="">-- เลือก --</option>'+MAIN_FORMULAS.map(f=>`<option>${f}</option>`).join('');
-}
-function onNMC(){
-  const s=SUB_MAP[fget('new-main')]||[];
-  document.getElementById('new-sub').innerHTML='<option value="">ทั้งหมด</option>'+s.map(x=>`<option>${x}</option>`).join('');
-}
-function addSpec(){
-  const main=fget('new-main'),sub=fget('new-sub');
-  if(!main){toast('กรุณาเลือก Main Formula','err');return;}
-  const min=parseFloat(document.getElementById('new-min').value)||0;
-  const max=parseFloat(document.getElementById('new-max').value)||0;
-  specs.push({main,sub,min,max});saveLocal();renderSpecPage();
-  document.getElementById('new-main').value='';
-  document.getElementById('new-sub').innerHTML='<option>ทั้งหมด</option>';
-  document.getElementById('new-min').value='';document.getElementById('new-max').value='';
-  toast('เพิ่ม SPEC แล้ว','ok');
-}
-async function pushSpec(){
-  saveLocal();
-  try{await gsCall({action:'saveSpec',specs});toast('บันทึก SPEC → Google Sheet สำเร็จ','ok');}
-  catch(e){toast('บันทึก SPEC ล้มเหลว: '+e.message,'err');}
 }
 
-// Init
-(function(){
-  const n=nowDT();
-  document.getElementById('f-date').value=n.date;
-  document.getElementById('f-time').value=n.time;
-  selCheck('');buildSampPanel();addRow();
-  autoConnect();
-})();
+function renderSpecST() {
+  const tb = document.getElementById('spec-st-tbody'); if(!tb) return;
+  tb.innerHTML = specST.map((r,i)=>`
+    <tr style="border-bottom:1px solid var(--border);">
+      <td style="padding:10px 16px;font-weight:600;">${r.dieSize}</td>
+      <td style="padding:8px 12px;text-align:center;">${specInp(r.stMax,`specST[${i}].stMax=parseFloat(this.value)`)}</td>
+      <td style="padding:8px 12px;text-align:center;">${specDelBtn(`specST.splice(${i},1);renderSpecST()`)}</td>
+    </tr>`).join('');
+}
+
+function renderSpecChem() {
+  const tb = document.getElementById('spec-chem-tbody'); if(!tb) return;
+  tb.innerHTML = specChem.map((r,i)=>`
+    <tr style="border-bottom:1px solid var(--border);">
+      <td style="padding:10px 12px;font-weight:600;">${r.formula}</td>
+      <td style="padding:6px 8px;text-align:center;">${specInp(r.mMin,   `specChem[${i}].mMin=parseFloat(this.value)`)}</td>
+      <td style="padding:6px 8px;text-align:center;">${specInp(r.mMax,   `specChem[${i}].mMax=parseFloat(this.value)`)}</td>
+      <td style="padding:6px 8px;text-align:center;">${specInp(r.cpMin,  `specChem[${i}].cpMin=parseFloat(this.value)`)}</td>
+      <td style="padding:6px 8px;text-align:center;">${specInp(r.cpMax,  `specChem[${i}].cpMax=parseFloat(this.value)`)}</td>
+      <td style="padding:6px 8px;text-align:center;">${specInp(r.fatMin, `specChem[${i}].fatMin=parseFloat(this.value)`)}</td>
+      <td style="padding:6px 8px;text-align:center;">${specInp(r.fatMax, `specChem[${i}].fatMax=parseFloat(this.value)`)}</td>
+      <td style="padding:6px 8px;text-align:center;">${specInp(r.fibMin, `specChem[${i}].fibMin=parseFloat(this.value)`)}</td>
+      <td style="padding:6px 8px;text-align:center;">${specInp(r.fibMax, `specChem[${i}].fibMax=parseFloat(this.value)`)}</td>
+      <td style="padding:6px 8px;text-align:center;">${specInp(r.lMin,   `specChem[${i}].lMin=parseFloat(this.value)`)}</td>
+      <td style="padding:6px 8px;text-align:center;">${specInp(r.lMax,   `specChem[${i}].lMax=parseFloat(this.value)`)}</td>
+      <td style="padding:6px 8px;text-align:center;">${specDelBtn(`specChem.splice(${i},1);renderSpecChem()`)}</td>
+    </tr>`).join('');
+}
+
+const DEFAULT_SPEC_SIZING = [
+  {dieSize:'1.0', lowerMax:18, insizeMin:50},
+  {dieSize:'1.2', lowerMax:18, insizeMin:50},
+  {dieSize:'1.4', lowerMax:18, insizeMin:50},
+  {dieSize:'1.7', lowerMax:18, insizeMin:50},
+  {dieSize:'2.0', lowerMax:18, insizeMin:50},
+  {dieSize:'2.3', lowerMax:18, insizeMin:50},
+];
+let specSizing = JSON.parse(localStorage.getItem('qc_spec_sizing') || 'null') || DEFAULT_SPEC_SIZING.map(r=>({...r}));
+
+function renderSpecSizing() {
+  const tb = document.getElementById('spec-sizing-tbody'); if(!tb) return;
+  tb.innerHTML = specSizing.map((r,i)=>`
+    <tr style="border-bottom:1px solid var(--border);">
+      <td style="padding:10px 16px;font-weight:600;">${r.dieSize}</td>
+      <td style="padding:8px 12px;text-align:center;">${specInp(r.lowerMax, `specSizing[${i}].lowerMax=parseFloat(this.value)`)}</td>
+      <td style="padding:8px 12px;text-align:center;">${specInp(r.insizeMin,`specSizing[${i}].insizeMin=parseFloat(this.value)`)}</td>
+      <td style="padding:8px 12px;text-align:center;">${specDelBtn(`specSizing.splice(${i},1);renderSpecSizing()`)}</td>
+    </tr>`).join('');
+}
+
+function addSpecSizingRow() {
+  const d=prompt('Die Size:'); if(!d) return;
+  specSizing.push({dieSize:d.trim(), lowerMax:18, insizeMin:50});
+  renderSpecSizing();
+}
+
+function getSizingSpec(dieSize) {
+  return specSizing.find(s=>s.dieSize===dieSize) || null;
+}
+
+function renderSpecPage() { renderSpecSV(); renderSpecST(); renderSpecSizing(); renderSpecChem(); }
+
+function addSpecSVRow() {
+  const f=prompt('Main Formula:'); if(!f) return;
+  const s=prompt('Sub Formula:')||'—';
+  specSV.push({formula:f.trim(),sub:s.trim(),svMin:0,svMax:0}); renderSpecSV();
+}
+function addSpecSTRow() {
+  const d=prompt('Die Size:'); if(!d) return;
+  specST.push({dieSize:d.trim(),stMax:25}); renderSpecST();
+}
+function addSpecChemRow() {
+  const f=prompt('Main Formula:'); if(!f) return;
+  specChem.push({formula:f.trim(),mMin:9.5,mMax:10.8,cpMin:0,cpMax:0,fatMin:'',fatMax:'',fibMin:'',fibMax:'',lMin:32,lMax:34}); renderSpecChem();
+}
+
+function saveAllSpec() {
+  localStorage.setItem('qc_spec_sv',     JSON.stringify(specSV));
+  localStorage.setItem('qc_spec_st',     JSON.stringify(specST));
+  localStorage.setItem('qc_spec_sizing', JSON.stringify(specSizing));
+  localStorage.setItem('qc_spec_chem',   JSON.stringify(specChem));
+  controlSpec = specChem.map(r=>({formula:r.formula,cpMin:r.cpMin,cpMax:r.cpMax,lMin:r.lMin,lMax:r.lMax,mMin:r.mMin,mMax:r.mMax}));
+  localStorage.setItem('qc_control_spec', JSON.stringify(controlSpec));
+
+  // ส่ง SPEC ไป Google Sheets
+  const sendToSheet = (dataType, dataArr) => {
+    const iframeName = 'spec_iframe_'+Date.now()+Math.random();
+    const iframe = document.createElement('iframe'); iframe.name=iframeName; iframe.style.display='none'; document.body.appendChild(iframe);
+    const form = document.createElement('form'); form.method='POST'; form.action=SHEETS_URL; form.target=iframeName; form.style.display='none';
+    const addInput = (k,v) => { const i=document.createElement('input'); i.type='hidden'; i.name=k; i.value=v??''; form.appendChild(i); };
+    addInput('dataType', dataType);
+    addInput('specData', JSON.stringify(dataArr));
+    document.body.appendChild(form); form.submit();
+    setTimeout(()=>{ try{document.body.removeChild(form);}catch(e){} try{document.body.removeChild(iframe);}catch(e){} },3000);
+  };
+  sendToSheet('spec_sv',     specSV);
+  sendToSheet('spec_st',     specST);
+  sendToSheet('spec_sizing', specSizing);
+  sendToSheet('spec_chem',   specChem);
+
+  const btn=event.target;
+  btn.textContent='✅ บันทึกแล้ว!';
+  setTimeout(()=>{ btn.textContent='💾 บันทึก SPEC ทั้งหมด'; },2000);
+}
+
+// ===== INSPECTOR DROPDOWN =====
+const DEFAULT_INSPECTORS = [
+  'Inspector 1','Inspector 2','Inspector 3','Inspector 4',
+  'Inspector 5','Inspector 6','Inspector 7'
+];
+let inspectors = JSON.parse(localStorage.getItem('qc_inspectors_simple') || 'null') || DEFAULT_INSPECTORS;
+
+function syncInspectorDropdown() {
+  const ids = ['f-inspector','sv-entry-inspector'];
+  ids.forEach(id => {
+    const sel = document.getElementById(id);
+    if(!sel) return;
+    const cur = sel.value;
+    sel.innerHTML = '<option value="">-- Select Inspector --</option>' +
+      inspectors.map(n=>`<option${n===cur?' selected':''}>${n}</option>`).join('');
+  });
+}
+
+// ===== INIT =====
+document.addEventListener('DOMContentLoaded',function(){
+  const now=new Date();
+  document.getElementById('f-date').value=now.toISOString().split('T')[0];
+  updateSamplingTime();
+  const homeDate = document.getElementById('home-date');
+  if(homeDate) homeDate.textContent = now.toLocaleDateString('th-TH',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  syncInspectorDropdown();
+});
 </script>
 </body>
 </html>
