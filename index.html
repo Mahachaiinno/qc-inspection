@@ -258,6 +258,19 @@ tr:hover td{background:var(--bg);}
         </div>
       </button>
 
+      <button onclick="goToRM()" style="width:100%;padding:0;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);cursor:pointer;text-align:left;transition:all 0.18s;font-family:inherit;overflow:hidden;" onmouseover="this.style.borderColor='#D85A30';this.style.boxShadow='0 2px 12px rgba(216,90,48,0.12)'" onmouseout="this.style.borderColor='var(--border)';this.style.boxShadow='none'">
+        <div style="display:flex;align-items:center;">
+          <div style="width:56px;min-height:80px;background:#FAECE7;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <i class="ti ti-box" aria-hidden="true" style="font-size:24px;color:#993C1D;"></i>
+          </div>
+          <div style="padding:14px 16px;">
+            <div style="font-size:15px;font-weight:600;color:var(--text);margin-bottom:3px;">RM</div>
+            <div style="font-size:12px;color:var(--text2);line-height:1.4;">Bin No · Material · %CP · L*</div>
+          </div>
+          <i class="ti ti-chevron-right" aria-hidden="true" style="font-size:16px;color:var(--text3);margin-left:auto;margin-right:14px;"></i>
+        </div>
+      </button>
+
       <button onclick="goToSpec()" style="width:100%;padding:0;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);cursor:pointer;text-align:left;transition:all 0.18s;font-family:inherit;overflow:hidden;" onmouseover="this.style.borderColor='#BA7517';this.style.boxShadow='0 2px 12px rgba(186,117,23,0.12)'" onmouseout="this.style.borderColor='var(--border)';this.style.boxShadow='none'">
         <div style="display:flex;align-items:center;gap:0;">
           <div style="width:56px;min-height:80px;background:#FAEEDA;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
@@ -638,8 +651,8 @@ tr:hover td{background:var(--bg);}
 
     <!-- Header Info -->
     <div class="card" style="margin-bottom:12px;">
-      <!-- แถวที่ 1: วันที่ Inspector Shift Sampling Time Sampling -->
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr;gap:12px;margin-bottom:14px;">
+      <!-- แถวที่ 1: วันที่ Inspector Shift -->
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px;">
         <div class="field">
           <label style="font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.04em;">วันที่ *</label>
           <input type="date" id="sv-entry-date" />
@@ -655,6 +668,9 @@ tr:hover td{background:var(--bg);}
             <option>P1</option><option>P2</option><option>P3</option>
           </select>
         </div>
+      </div>
+      <!-- แถวที่ 2: Sampling Time + Sampling + Check -->
+      <div style="display:grid;grid-template-columns:1fr 1fr 0.7fr;gap:12px;align-items:end;">
         <div class="field">
           <label style="font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.04em;">เวลา (Sampling Time) *</label>
           <select id="sv-entry-time"><option value="">-- เลือก Shift ก่อน --</option></select>
@@ -669,21 +685,20 @@ tr:hover td{background:var(--bg);}
             <option>Packing</option><option>Before Sieve</option><option>Others</option>
           </select>
         </div>
-      </div>
-      <!-- แถวที่ 2: Check -->
-      <div>
-        <div style="font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:8px;">Check</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-          <button id="sv-check-round" onclick="selectSVCheck('round')"
-            style="padding:18px 12px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);color:var(--text2);cursor:pointer;font-family:inherit;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;transition:all 0.15s;">
-            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#1a3a8f" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m9 12 2 2 4-4"/></svg>
-            <span style="font-size:13px;font-weight:500;">ตรวจสอบ</span>
-          </button>
-          <button id="sv-check-recheck" onclick="selectSVCheck('recheck')"
-            style="padding:18px 12px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);color:var(--text2);cursor:pointer;font-family:inherit;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;transition:all 0.15s;">
-            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#534AB7" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11A8.1 8.1 0 0 0 4.5 9M4 5v4h4"/><path d="M4 13a8.1 8.1 0 0 0 15.5 2m.5 4v-4h-4"/></svg>
-            <span style="font-size:13px;font-weight:500;">Recheck</span>
-          </button>
+        <div class="field">
+          <label style="font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.04em;">Check</label>
+          <div style="display:flex;gap:6px;height:42px;">
+            <button id="sv-check-round" onclick="selectSVCheck('round')"
+              style="flex:1;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--text2);cursor:pointer;font-family:inherit;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;transition:all 0.15s;">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1a3a8f" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m9 12 2 2 4-4"/></svg>
+              <span style="font-size:9px;font-weight:500;">ตรวจสอบ</span>
+            </button>
+            <button id="sv-check-recheck" onclick="selectSVCheck('recheck')"
+              style="flex:1;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--text2);cursor:pointer;font-family:inherit;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;transition:all 0.15s;">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#534AB7" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11A8.1 8.1 0 0 0 4.5 9M4 5v4h4"/><path d="M4 13a8.1 8.1 0 0 0 15.5 2m.5 4v-4h-4"/></svg>
+              <span style="font-size:9px;font-weight:500;">Recheck</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -726,6 +741,105 @@ tr:hover td{background:var(--bg);}
         style="background:var(--surface);border:1px solid var(--border);cursor:pointer;padding:12px 16px;border-radius:var(--radius-sm);color:var(--text);transition:all 0.15s;display:inline-flex;align-items:center;gap:6px;font-size:14px;font-family:inherit;"
         onmouseover="this.style.background='var(--bg)'" onmouseout="this.style.background='var(--surface)'" title="กลับหน้าหลัก">
         <i class="ti ti-home" aria-hidden="true" style="font-size:18px;"></i> หน้าหลัก
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- RM PAGE -->
+<div class="page" id="page-rm">
+  <div style="max-width:600px;margin:0 auto;">
+    <div class="dash-header">
+      <h2>📦 บันทึกข้อมูล RM</h2>
+    </div>
+    <div class="card">
+      <div class="card-title">ข้อมูลทั่วไป</div>
+      <div class="grid-2">
+        <div class="field"><label>วันที่</label><input type="date" id="rm-date" /></div>
+        <div class="field"><label>Inspector</label><select id="rm-inspector"><option value="">-- Select --</option></select></div>
+      </div>
+      <div style="height:10px;"></div>
+      <div class="grid-2">
+        <div class="field"><label>Shift</label>
+          <select id="rm-shift">
+            <option value="">-- Select --</option>
+            <option>P1</option><option>P2</option><option>P3</option>
+          </select>
+        </div>
+        <div class="field"><label>Sampling Time</label>
+          <select id="rm-time"><option value="">-- เลือก Shift ก่อน --</option></select>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">ข้อมูล RM</div>
+      <div class="grid-2">
+        <div class="field"><label>1. Bin No</label><input type="text" id="rm-bin" placeholder="Bin No." /></div>
+        <div class="field">
+          <label>2. Material</label>
+          <select id="rm-material" onchange="toggleRMOthers()">
+            <option value="">-- Select --</option>
+            <option>Remix 701</option>
+            <option>Remix 901</option>
+            <option>OC</option>
+            <option value="Others">Others</option>
+          </select>
+        </div>
+      </div>
+      <div class="field" id="rm-others-field" style="display:none;margin-top:10px;">
+        <label>ระบุ Material</label>
+        <input type="text" id="rm-material-others" placeholder="ระบุ Material..." />
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">การวัดค่า</div>
+      <div class="grid-2">
+        <div class="field"><label>3. %CP</label><input type="number" id="rm-cp" placeholder="0.00" step="0.01" /></div>
+      </div>
+      <div style="height:10px;"></div>
+      <div class="sizing-group">
+        <div class="sizing-group-label">🎨 4. Colors (CIE L*a*b*)</div>
+        <div class="sizing-row">
+          <div class="sizing-field">
+            <div class="sf-label" style="color:#555;">L*</div>
+            <input type="number" id="rm-color-l" placeholder="0.00" step="0.01" min="0" max="100" />
+          </div>
+          <div class="sizing-field">
+            <div class="sf-label" style="color:#C0392B;">a*</div>
+            <input type="number" id="rm-color-a" placeholder="0.00" step="0.01" />
+          </div>
+          <div class="sizing-field">
+            <div class="sf-label" style="color:#2471A3;">b*</div>
+            <input type="number" id="rm-color-b" placeholder="0.00" step="0.01" />
+          </div>
+        </div>
+      </div>
+      <div style="height:12px;"></div>
+      <div class="sizing-group">
+        <div class="sizing-group-label">📝 5. Others</div>
+        <div id="rm-others-rows">
+          <div class="rm-other-row" style="display:grid;grid-template-columns:1fr 1fr auto;gap:8px;margin-bottom:8px;align-items:center;">
+            <input type="text" placeholder="ชื่อหัวข้อ (เช่น %M)" style="border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 10px;font-size:14px;font-family:inherit;outline:none;width:100%;" />
+            <input type="number" placeholder="ค่า" step="0.01" style="border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 10px;font-size:14px;font-family:monospace;outline:none;width:100%;" />
+            <button onclick="removeRMOtherRow(this)" style="background:none;border:1px solid var(--red-light);border-radius:var(--radius-sm);color:var(--red);cursor:pointer;padding:6px 10px;font-size:13px;">🗑</button>
+          </div>
+        </div>
+        <button class="btn" onclick="addRMOtherRow()" style="margin-top:4px;font-size:12px;">+ เพิ่มรายการ</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="ts-bar">
+        <span>🕐</span>
+        <span class="ts-label">เวลาบันทึก</span>
+        <span class="ts-val" id="rm-ts-val">— ยังไม่ได้บันทึก —</span>
+      </div>
+      <button class="submit-btn" onclick="saveRMRecord()">💾 บันทึกข้อมูล RM</button>
+      <div class="success-toast" id="rm-toast"></div>
+    </div>
+    <div style="text-align:center;padding:16px 0;">
+      <button onclick="showPage('home',document.querySelector('.nav-tab'));document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));document.querySelector('.nav-tab').classList.add('active');"
+        style="background:var(--surface);border:1px solid var(--border);cursor:pointer;padding:10px 20px;border-radius:var(--radius-sm);font-size:13px;font-family:inherit;color:var(--text);">
+        🏠 หน้าหลัก
       </button>
     </div>
   </div>
@@ -1391,8 +1505,16 @@ function renderSVRows() {
     const stMax = sp ? sp.stMax : '—';
     const svVal = parseFloat(r.sv);
     const stVal = parseFloat(r.st);
-    const svRes = sp && !isNaN(svVal) ? (svVal>=sp.svMin&&svVal<=sp.svMax?'<span style="color:#0F6E56;font-weight:600;">PASS</span>':'<span style="color:#993C1D;font-weight:600;">FAIL</span>') : '—';
-    const stRes = sp && !isNaN(stVal) ? (stVal<=sp.stMax?'<span style="color:#0F6E56;font-weight:600;">PASS</span>':'<span style="color:#993C1D;font-weight:600;">FAIL</span>') : '—';
+    const svRes = sp && !isNaN(svVal)
+      ? (svVal>=sp.svMin&&svVal<=sp.svMax
+          ? '<span style="color:#0F6E56;font-weight:600;">PASS</span>'
+          : '<span style="color:#993C1D;font-weight:600;">FAIL</span>')
+      : '—';
+    const stRes = sp && !isNaN(stVal)
+      ? (stVal<=sp.stMax
+          ? '<span style="color:#0F6E56;font-weight:600;">PASS</span>'
+          : '<span style="color:#993C1D;font-weight:600;">FAIL</span>')
+      : '—';
     const sel = (id,opts,val) => `<select onchange="updateSVRow(${i},'${id}',this.value)" style="width:100%;border:1px solid var(--border);border-radius:4px;padding:5px 4px;font-size:12px;font-family:inherit;background:var(--surface);color:var(--text);outline:none;">${opts.map(o=>`<option${o===val?' selected':''}>${o}</option>`).join('')}</select>`;
     const inp = (id,val,type='text',step='') => `<input type="${type}" value="${val}" step="${step}" onchange="updateSVRow(${i},'${id}',this.value)" style="width:100%;border:1px solid var(--border);border-radius:4px;padding:5px 6px;font-size:12px;font-family:monospace;background:var(--surface);color:var(--text);outline:none;text-align:center;" />`;
     return `<tr style="border-bottom:1px solid var(--border);">
@@ -1451,6 +1573,110 @@ function saveSVRows() {
   localStorage.setItem('qc_records',JSON.stringify(records));
   svRows=[]; addSVRow();
   alert('✅ บันทึกสำเร็จ '+records.filter(r=>r.purpose==='sv').length+' รายการ');
+}
+
+// ===== RM PAGE =====
+function goToRM() {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-rm').classList.add('active');
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  syncRMInspector();
+  const now = new Date();
+  document.getElementById('rm-date').value = now.toISOString().split('T')[0];
+}
+
+function syncRMInspector() {
+  const sel = document.getElementById('rm-inspector');
+  if(!sel) return;
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">-- Select --</option>' +
+    inspectors.map(n=>`<option${n===cur?' selected':''}>${n}</option>`).join('');
+}
+
+function toggleRMOthers() {
+  const val = document.getElementById('rm-material').value;
+  document.getElementById('rm-others-field').style.display = val === 'Others' ? '' : 'none';
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  const rmShift = document.getElementById('rm-shift');
+  if(rmShift) rmShift.addEventListener('change', function() {
+    const times = SAMPLING_TIMES[this.value] || [];
+    const sel = document.getElementById('rm-time');
+    sel.innerHTML = times.length
+      ? '<option value="">-- Select Time --</option>' + times.map(t=>`<option>${t}</option>`).join('')
+      : '<option value="">-- เลือก Shift ก่อน --</option>';
+  });
+});
+
+function addRMOtherRow() {
+  const container = document.getElementById('rm-others-rows');
+  const row = document.createElement('div');
+  row.className = 'rm-other-row';
+  row.style.cssText = 'display:grid;grid-template-columns:1fr 1fr auto;gap:8px;margin-bottom:8px;align-items:center;';
+  row.innerHTML = `
+    <input type="text" placeholder="ชื่อหัวข้อ" style="border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 10px;font-size:14px;font-family:inherit;outline:none;width:100%;" />
+    <input type="number" placeholder="ค่า" step="0.01" style="border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 10px;font-size:14px;font-family:monospace;outline:none;width:100%;" />
+    <button onclick="removeRMOtherRow(this)" style="background:none;border:1px solid var(--red-light);border-radius:var(--radius-sm);color:var(--red);cursor:pointer;padding:6px 10px;font-size:13px;">🗑</button>`;
+  container.appendChild(row);
+}
+
+function removeRMOtherRow(btn) {
+  btn.closest('.rm-other-row').remove();
+}
+
+function getRMOthers() {
+  const rows = document.querySelectorAll('.rm-other-row');
+  const result = {};
+  rows.forEach(row => {
+    const inputs = row.querySelectorAll('input');
+    const name  = inputs[0]?.value?.trim();
+    const value = inputs[1]?.value?.trim();
+    if(name && value) result[name] = value;
+  });
+  return result;
+}
+
+function saveRMRecord() {
+  const saved = new Date();
+  const tsStr = saved.toLocaleDateString('th-TH',{day:'2-digit',month:'2-digit',year:'numeric'})+' '+
+                saved.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  const material = document.getElementById('rm-material').value === 'Others'
+    ? (document.getElementById('rm-material-others').value || 'Others')
+    : document.getElementById('rm-material').value;
+  const rec = {
+    id: Date.now(),
+    date: document.getElementById('rm-date').value,
+    time: document.getElementById('rm-time').value,
+    inspector: document.getElementById('rm-inspector').value,
+    shift: document.getElementById('rm-shift').value,
+    binNo: document.getElementById('rm-bin').value,
+    material,
+    cp: document.getElementById('rm-cp').value,
+    colorL: document.getElementById('rm-color-l').value,
+    savedAt: tsStr,
+    dataType: 'rm'
+  };
+  document.getElementById('rm-ts-val').textContent = tsStr;
+  const toast = document.getElementById('rm-toast');
+  toast.style.display = 'block';
+  toast.style.background = 'var(--green-light)';
+  toast.style.borderColor = 'var(--green)';
+  toast.style.color = 'var(--green-dark)';
+  toast.textContent = '⏳ กำลังบันทึก...';
+  // Send to Google Sheets
+  const iframeName = 'rm_iframe_'+Date.now();
+  const iframe = document.createElement('iframe'); iframe.name=iframeName; iframe.style.display='none'; document.body.appendChild(iframe);
+  const form = document.createElement('form'); form.method='POST'; form.action=SHEETS_URL; form.target=iframeName; form.style.display='none';
+  Object.entries(rec).forEach(([k,v])=>{ const i=document.createElement('input'); i.type='hidden'; i.name=k; i.value=v??''; form.appendChild(i); });
+  document.body.appendChild(form); form.submit();
+  setTimeout(()=>{ try{document.body.removeChild(form);}catch(e){} try{document.body.removeChild(iframe);}catch(e){} },3000);
+  toast.textContent = '✅ บันทึกสำเร็จ!';
+  setTimeout(()=>{ toast.style.display='none'; },4000);
+  // Clear form
+  ['rm-bin','rm-cp','rm-color-l'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('rm-material').value = '';
+  document.getElementById('rm-others-field').style.display = 'none';
 }
 
 // ===== SPEC CHECK HELPERS =====
