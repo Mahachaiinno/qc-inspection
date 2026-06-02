@@ -1273,8 +1273,47 @@ async function saveRecord() {
     document.body.appendChild(form); form.submit();
     setTimeout(()=>{ try{document.body.removeChild(form);}catch(e){} try{document.body.removeChild(iframe);}catch(e){} },3000);
     toast.textContent='✅ บันทึกสำเร็จ! ข้อมูลส่งไป Google Sheets แล้ว';
+    clearForm();
   } catch(err) { toast.textContent='⚠️ บันทึก Local แล้ว แต่เชื่อมต่อ Sheets ไม่ได้'; }
   setTimeout(()=>{ toast.style.display='none'; }, 5000);
+}
+
+function clearForm() {
+  // ล้างค่าตัวเลขและข้อความทั้งหมด ยกเว้น วันที่ Inspector Shift
+  const keepIds = ['f-date','f-inspector','f-shift','f-time'];
+  document.querySelectorAll('#page-form input[type="number"], #page-form input[type="text"]').forEach(el => {
+    if(!keepIds.includes(el.id)) el.value = '';
+  });
+  // reset dropdowns (ยกเว้น วันที่ Inspector Shift)
+  ['f-sampling','f-formula','f-subformula','f-diesize','f-color-method'].forEach(id => {
+    const el = document.getElementById(id); if(el) el.value = '';
+  });
+  // reset purpose buttons
+  purposeVal = '';
+  document.getElementById('btn-round').className = 'purpose-btn';
+  document.getElementById('btn-recheck').className = 'purpose-btn';
+  // hide others fields
+  document.getElementById('others-field').style.display = 'none';
+  document.getElementById('sampling-others-field').style.display = 'none';
+  // reset color preview
+  const bar = document.getElementById('color-preview-bar');
+  if(bar) bar.style.background = 'var(--bg)';
+  const lbl = document.getElementById('color-preview-label');
+  if(lbl) lbl.textContent = 'ตัวอย่างสี (กรอก L* a* b*)';
+  // reset PASS/FAIL badges
+  ['pf-m','pf-cp','pf-fat','pf-fiber','pf-l','pf-lower','pf-insize'].forEach(id => {
+    const el = document.getElementById(id); if(el) el.innerHTML = '';
+  });
+  // reset sieve
+  ['f-sieve-total','f-sieve-lower-wt','f-sieve-insize-wt','f-sieve-upper-wt','f-sieve-dust-wt'].forEach(id => {
+    const el = document.getElementById(id); if(el) el.value = '';
+  });
+  ['f-sieve-lower-pct','f-sieve-insize-pct','f-sieve-upper-pct','f-sieve-dust-pct'].forEach(id => {
+    const el = document.getElementById(id); if(el) el.value = '—';
+  });
+  // reset ts-val
+  const ts = document.getElementById('ts-val');
+  if(ts) { ts.textContent = '— ยังไม่ได้บันทึก —'; ts.classList.remove('saved'); }
 }
 
 function getActiveParams() {
