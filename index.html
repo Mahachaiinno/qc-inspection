@@ -369,7 +369,7 @@ tr:hover td{background:var(--bg);}
       </div>
       <div class="field">
         <label>7. Main Formula</label>
-        <select id="f-formula" onchange="toggleOthers();updateFormPF()">
+        <select id="f-formula" onchange="toggleOthers();updateFormPF();updateSubFormulaOptions()">
           <option value="">-- Select --</option>
           <option>701</option><option>901</option><option>POLY</option>
           <option>97LC</option><option>MS9123</option><option>MS3618</option>
@@ -385,11 +385,15 @@ tr:hover td{background:var(--bg);}
       </div>
       <div class="field">
         <label>8. Sub Formula</label>
-        <select id="f-subformula">
+        <select id="f-subformula" onchange="toggleSubOthers()">
           <option value="">-- Select --</option>
           <option>P</option><option>S</option><option>G</option><option>NK</option>
-          <option>B1</option><option>B2</option><option>B3</option><option>NONE</option>
+          <option>PM</option><option>B1</option><option>B2</option><option>B3</option>
+          <option>NONE</option><option value="OTHERS">OTHERS</option>
         </select>
+        <div id="sub-others-field" style="display:none;margin-top:6px;">
+          <input type="text" id="f-subformula-others" placeholder="ระบุ Sub Formula..." style="border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 10px;font-size:14px;font-family:inherit;width:100%;outline:none;" />
+        </div>
       </div>
       <div class="field"><label>9. Feed Code</label><input type="text" id="f-feedcode" placeholder="Feed code" /></div>
       <div class="field"><label>10. Lot</label><input type="text" id="f-lot" placeholder="Lot number" /></div>
@@ -587,7 +591,7 @@ tr:hover td{background:var(--bg);}
         <select id="dd-subformula" onchange="renderDashboard()">
           <option value="">ทุก Sub Formula</option>
           <option>P</option><option>S</option><option>G</option><option>NK</option>
-          <option>B1</option><option>B2</option><option>B3</option><option>NONE</option>
+          <option>PM</option><option>B1</option><option>B2</option><option>B3</option><option>NONE</option>
         </select>
       </div>
       <div class="field">
@@ -1175,6 +1179,35 @@ function updateSamplingTime() {
     : '<option value="">-- เลือก Shift ก่อน --</option>';
 }
 
+const SUB_FORMULA_MAP = {
+  '701'   : ['PM','G','S','P','OTHERS'],
+  '901'   : ['G','S','P','OTHERS'],
+  'POLY'  : ['NONE','NK','OTHERS'],
+  'BROODS': ['B1','B2','B3'],
+  'MS9123': ['NONE','OTHERS'],
+  'MS3618': ['NONE','OTHERS'],
+  'TNT'   : ['NONE','OTHERS'],
+};
+
+function updateSubFormulaOptions() {
+  const formula = document.getElementById('f-formula').value;
+  const sel = document.getElementById('f-subformula');
+  const cur = sel.value;
+  const opts = SUB_FORMULA_MAP[formula] ||
+    ['P','S','G','NK','PM','B1','B2','B3','NONE','OTHERS'];
+  sel.innerHTML = '<option value="">-- Select --</option>' +
+    opts.map(o => `<option value="${o==='OTHERS'?'OTHERS':o}"${o===cur?' selected':''}>${o}</option>`).join('');
+  // reset sub others
+  document.getElementById('sub-others-field').style.display = 'none';
+  document.getElementById('f-subformula-others').value = '';
+}
+
+function toggleSubOthers() {
+  const val = document.getElementById('f-subformula').value;
+  document.getElementById('sub-others-field').style.display = val === 'OTHERS' ? '' : 'none';
+  if(val !== 'OTHERS') document.getElementById('f-subformula-others').value = '';
+}
+
 function toggleOthers() {
   const val = document.getElementById('f-formula').value;
   document.getElementById('others-field').style.display = val === 'OTHERS' ? '' : 'none';
@@ -1224,7 +1257,7 @@ async function saveRecord() {
     sampling: g('f-sampling')==='Others' ? (g('f-sampling-others')||'Others') : g('f-sampling'),
     line:g('f-line'), lot:g('f-lot'), feedcode:g('f-feedcode'), diesize:g('f-diesize'),
     formula:g('f-formula')==='OTHERS'?(g('f-formula-others')||'OTHERS'):g('f-formula'),
-    subformula:g('f-subformula'),
+    subformula: g('f-subformula')==='OTHERS' ? (g('f-subformula-others')||'OTHERS') : g('f-subformula'),
     sv:'', cp:g('f-cp'), sinktime:'',
     svVal: currentFormType==='sv'?g('f-sv'):'',
     sinktimeVal: currentFormType==='sv'?g('f-sinktime'):'',
@@ -1295,6 +1328,10 @@ function clearForm() {
   // hide others fields
   document.getElementById('others-field').style.display = 'none';
   document.getElementById('sampling-others-field').style.display = 'none';
+  document.getElementById('sub-others-field').style.display = 'none';
+  if(document.getElementById('f-subformula-others')) document.getElementById('f-subformula-others').value = '';
+  // reset sub formula options
+  updateSubFormulaOptions();
   // reset color preview
   const bar = document.getElementById('color-preview-bar');
   if(bar) bar.style.background = 'var(--bg)';
@@ -1555,12 +1592,24 @@ function renderSVRows() {
           : '<span style="color:#993C1D;font-weight:600;">FAIL</span>')
       : '—';
     const sel = (id,opts,val) => `<select onchange="updateSVRow(${i},'${id}',this.value)" style="width:100%;border:1px solid var(--border);border-radius:4px;padding:5px 4px;font-size:12px;font-family:inherit;background:var(--surface);color:var(--text);outline:none;">${opts.map(o=>`<option${o===val?' selected':''}>${o}</option>`).join('')}</select>`;
+    const selSub = (idx, formula, curVal) => {
+      const opts = SUB_FORMULA_MAP[formula] || ['P','S','G','NK','PM','B1','B2','B3','NONE','OTHERS'];
+      const allOpts = ['—', ...opts];
+      const isOthers = curVal === 'OTHERS' || (curVal && !allOpts.includes(curVal) && curVal !== '—');
+      const selectVal = isOthers ? 'OTHERS' : curVal;
+      return `<div>
+        <select onchange="updateSVRow(${idx},'subformula',this.value);renderSVRows()" style="width:100%;border:1px solid var(--border);border-radius:4px;padding:5px 4px;font-size:12px;font-family:inherit;background:var(--surface);color:var(--text);outline:none;">
+          ${allOpts.map(o=>`<option value="${o}"${o===selectVal?' selected':''}>${o}</option>`).join('')}
+        </select>
+        ${selectVal==='OTHERS' ? `<input type="text" value="${isOthers&&curVal!=='OTHERS'?curVal:''}" placeholder="ระบุ..." onchange="updateSVRow(${idx},'subformula',this.value)" style="margin-top:4px;width:100%;border:1px solid var(--border);border-radius:4px;padding:5px 6px;font-size:12px;font-family:inherit;outline:none;" />` : ''}
+      </div>`;
+    };
     const inp = (id,val,type='text',step='') => `<input type="${type}" value="${val}" step="${step}" onchange="updateSVRow(${i},'${id}',this.value)" style="width:100%;border:1px solid var(--border);border-radius:4px;padding:5px 6px;font-size:12px;font-family:monospace;background:var(--surface);color:var(--text);outline:none;text-align:center;" />`;
     return `<tr style="border-bottom:1px solid var(--border);">
       <td style="padding:6px;text-align:center;"><button onclick="removeSVRow(${i})" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:14px;padding:2px 4px;">✕</button></td>
       <td style="padding:4px;">${sel('line',['—','Line 1','Line 2','Line 3','Line 4','Line 5','Line 6','Line 7','Line 8','C1','C2','C3','C4'],r.line||'—')}</td>
       <td style="padding:4px;">${sel('formula',['—','701','901','POLY','97LC','MS9123','MS3618','BROODS','TNT','OTHERS'],r.formula||'—')}</td>
-      <td style="padding:4px;">${sel('subformula',['None','P','S','G','NK','B1','B2','B3'],r.subformula||'None')}</td>
+      <td style="padding:4px;">${selSub(i, r.formula||'—', r.subformula||'')}</td>
       <td style="padding:4px;"><input type="text" value="${r.feedcode||''}" onchange="updateSVRow(${i},'feedcode',this.value)" placeholder="Feed Code" style="width:100%;border:1px solid var(--border);border-radius:4px;padding:5px 6px;font-size:12px;font-family:inherit;background:var(--surface);color:var(--text);outline:none;" /></td>
       <td style="padding:4px;">${sel('diesize',['—','1.0','1.2','1.4','1.7','2.0','2.3','Crumble'],r.diesize||'—')}</td>
       <td style="padding:4px;">${inp('sv',r.sv||'','number','0.01')}</td>
@@ -1576,6 +1625,7 @@ function renderSVRows() {
 
 function updateSVRow(i, key, val) {
   svRows[i][key] = val;
+  if(key === 'formula') svRows[i].subformula = ''; // reset sub when formula changes
   renderSVRows();
 }
 function addSVRow() { svRows.push({line:'—',formula:'—',subformula:'None',feedcode:'',diesize:'—',sv:'',st:''}); renderSVRows(); }
