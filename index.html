@@ -1289,7 +1289,10 @@ function calcSieve() {
 }
 
 // ===== FORM =====
-function g(id) { return document.getElementById(id).value; }
+function g(id) {
+  const el = document.getElementById(id);
+  return el ? el.value : '';
+}
 
 function selectPurpose(type) {
   purposeVal = type;
