@@ -355,17 +355,20 @@ tr:hover td{background:var(--bg);}
     <div class="grid-3">
       <div class="field"><label>5. LINE</label>
         <select id="f-line"><option value="">-- Select --</option>
-          <option>Line 1</option><option>Line 2</option><option>Line 3</option><option>Line 4</option>
-          <option>Line 5</option><option>Line 6</option><option>Line 7</option><option>Line 8</option>
+          <option>Line1(A)</option><option>Line2(B)</option><option>Line3(C)</option><option>Line4</option>
+          <option>Line5</option><option>Line6</option><option>Line7</option><option>Line8</option>
           <option>C1</option><option>C2</option><option>C3</option><option>C4</option>
         </select>
       </div>
       <div class="field"><label>6. Die Size</label>
-        <select id="f-diesize" onchange="updateSizingPF()">
+        <select id="f-diesize" onchange="updateSizingPF();const oth=document.getElementById('diesize-others-field');if(oth)oth.style.display=this.value==='OTHERS'?'':'none';">
           <option value="">-- Select --</option>
           <option>1.0</option><option>1.2</option><option>1.4</option><option>1.7</option>
           <option>2.0</option><option>2.3</option><option>Crumble</option>
         </select>
+        <div id="diesize-others-field" style="display:none;margin-top:6px;">
+          <input type="text" id="f-diesize-others" placeholder="ระบุ Die Size..." style="border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 10px;font-size:14px;font-family:inherit;width:100%;outline:none;" />
+        </div>
       </div>
       <div class="field">
         <label>7. Main Formula</label>
@@ -565,8 +568,8 @@ tr:hover td{background:var(--bg);}
         <label style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.05em;">LINE</label>
         <select id="dd-line" onchange="renderDashboard()">
           <option value="">ทุก LINE</option>
-          <option>Line 1</option><option>Line 2</option><option>Line 3</option><option>Line 4</option>
-          <option>Line 5</option><option>Line 6</option><option>Line 7</option><option>Line 8</option>
+          <option>Line1(A)</option><option>Line2(B)</option><option>Line3(C)</option><option>Line4</option>
+          <option>Line5</option><option>Line6</option><option>Line7</option><option>Line8</option>
           <option>C1</option><option>C2</option><option>C3</option><option>C4</option>
         </select>
       </div>
@@ -859,7 +862,7 @@ tr:hover td{background:var(--bg);}
     </div>
     <div class="filter-bar">
       <select id="filter-shift" onchange="renderTable()"><option value="">Shift ทั้งหมด</option><option>P1</option><option>P2</option><option>P3</option></select>
-      <select id="filter-line" onchange="renderTable()"><option value="">Line ทั้งหมด</option><option>Line 1</option><option>Line 2</option><option>Line 3</option><option>Line 4</option><option>Line 5</option><option>Line 6</option><option>Line 7</option><option>Line 8</option><option>C1</option><option>C2</option><option>C3</option><option>C4</option></select>
+      <select id="filter-line" onchange="renderTable()"><option value="">Line ทั้งหมด</option><option>Line1(A)</option><option>Line2(B)</option><option>Line3(C)</option><option>Line4</option><option>Line5</option><option>Line6</option><option>Line7</option><option>Line8</option><option>C1</option><option>C2</option><option>C3</option><option>C4</option></select>
       <select id="filter-purpose" onchange="renderTable()"><option value="">Check ทั้งหมด</option><option value="round">ตามรอบ</option><option value="recheck">Recheck</option></select>
       <input type="date" id="filter-date" onchange="renderTable()" />
       <button class="btn" onclick="clearFilters()">✕ ล้าง</button>
@@ -1200,12 +1203,33 @@ function updateSubFormulaOptions() {
   // reset sub others
   document.getElementById('sub-others-field').style.display = 'none';
   document.getElementById('f-subformula-others').value = '';
+  // reset die size to full options when formula changes
+  updateDieSizeOptions('');
 }
 
 function toggleSubOthers() {
   const val = document.getElementById('f-subformula').value;
   document.getElementById('sub-others-field').style.display = val === 'OTHERS' ? '' : 'none';
   if(val !== 'OTHERS') document.getElementById('f-subformula-others').value = '';
+  updateDieSizeOptions(val);
+}
+
+function updateDieSizeOptions(subFormula) {
+  const sel = document.getElementById('f-diesize');
+  const cur = sel.value;
+  const allSizes = ['1.0','1.2','1.4','1.7','2.0','2.3','Crumble'];
+  const sizeMap  = {
+    'S': ['1.0','1.2','1.4','OTHERS'],
+    'G': ['1.7','2.0','2.3','OTHERS'],
+  };
+  const opts = sizeMap[subFormula] || allSizes;
+  sel.innerHTML = '<option value="">-- Select --</option>' +
+    opts.map(o => `<option value="${o}"${o===cur?' selected':''}>${o}</option>`).join('');
+  // show/hide others input
+  const othField = document.getElementById('diesize-others-field');
+  if(othField) othField.style.display = (sizeMap[subFormula] && cur==='OTHERS') ? '' : 'none';
+  if(cur && !opts.includes(cur)) sel.value = '';
+  updateSizingPF();
 }
 
 function toggleOthers() {
@@ -1499,7 +1523,7 @@ function renderDashboard() {
   else { tb2.innerHTML=groups.map(g=>`<tr><td><strong>${g.line}</strong></td><td>${g.fc}</td><td><span class="badge badge-round">${g.items.length}</span></td><td>${g.items.filter(r=>r.purpose==='round').length}</td><td>${g.items.filter(r=>r.purpose==='recheck').length}</td><td>${avg(g.items.map(r=>r.sv))}</td><td>${avg(g.items.map(r=>r.cp))}</td><td>${avg(g.items.map(r=>r.sinktime))}</td></tr>`).join(''); }
 
   // Sizing % stacked bar
-  const sizingLines=['Line 1','Line 2','Line 3','Line 4','Line 5','Line 6','Line 7','Line 8'].filter(l=>data.some(r=>r.line===l));
+  const sizingLines=['Line1(A)','Line2(B)','Line3(C)','Line4','Line5','Line6','Line7','Line8'].filter(l=>data.some(r=>r.line===l));
   function sizePct(ld){ let su=0,si=0,sp=0; ld.forEach(r=>{su+=parseFloat(r.under)||0;si+=parseFloat(r.insize)||0;sp+=parseFloat(r.upper)||0;}); const t=su+si+sp; if(!t) return{under:0,insize:0,upper:0}; return{under:parseFloat(((su/t)*100).toFixed(1)),insize:parseFloat(((si/t)*100).toFixed(1)),upper:parseFloat(((sp/t)*100).toFixed(1))}; }
   const szData=sizingLines.map(l=>sizePct(data.filter(r=>r.line===l)));
   drawChart('chart-sizing-pct','bar',sizingLines,[
@@ -1604,14 +1628,27 @@ function renderSVRows() {
         ${selectVal==='OTHERS' ? `<input type="text" value="${isOthers&&curVal!=='OTHERS'?curVal:''}" placeholder="ระบุ..." onchange="updateSVRow(${idx},'subformula',this.value)" style="margin-top:4px;width:100%;border:1px solid var(--border);border-radius:4px;padding:5px 6px;font-size:12px;font-family:inherit;outline:none;" />` : ''}
       </div>`;
     };
+    const selDie = (idx, subFormula, curVal) => {
+      const dieSizeMap = { 'S': ['1.0','1.2','1.4','OTHERS'], 'G': ['1.7','2.0','2.3','OTHERS'] };
+      const opts = dieSizeMap[subFormula] || ['1.0','1.2','1.4','1.7','2.0','2.3','Crumble','OTHERS'];
+      const allOpts = ['—', ...opts];
+      const isOthers = curVal === 'OTHERS' || (curVal && !allOpts.includes(curVal) && curVal !== '—');
+      const selectVal = isOthers ? 'OTHERS' : curVal;
+      return `<div>
+        <select onchange="updateSVRow(${idx},'diesize',this.value);renderSVRows()" style="width:100%;border:1px solid var(--border);border-radius:4px;padding:5px 4px;font-size:12px;font-family:inherit;background:var(--surface);color:var(--text);outline:none;">
+          ${allOpts.map(o=>`<option value="${o}"${o===selectVal?' selected':''}>${o}</option>`).join('')}
+        </select>
+        ${selectVal==='OTHERS' ? `<input type="text" value="${isOthers&&curVal!=='OTHERS'?curVal:''}" placeholder="ระบุ..." onchange="updateSVRow(${idx},'diesize',this.value)" style="margin-top:4px;width:100%;border:1px solid var(--border);border-radius:4px;padding:5px 6px;font-size:12px;font-family:inherit;outline:none;" />` : ''}
+      </div>`;
+    };
     const inp = (id,val,type='text',step='') => `<input type="${type}" value="${val}" step="${step}" onchange="updateSVRow(${i},'${id}',this.value)" style="width:100%;border:1px solid var(--border);border-radius:4px;padding:5px 6px;font-size:12px;font-family:monospace;background:var(--surface);color:var(--text);outline:none;text-align:center;" />`;
     return `<tr style="border-bottom:1px solid var(--border);">
       <td style="padding:6px;text-align:center;"><button onclick="removeSVRow(${i})" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:14px;padding:2px 4px;">✕</button></td>
-      <td style="padding:4px;">${sel('line',['—','Line 1','Line 2','Line 3','Line 4','Line 5','Line 6','Line 7','Line 8','C1','C2','C3','C4'],r.line||'—')}</td>
+      <td style="padding:4px;">${sel('line',['—','Line1(A)','Line2(B)','Line3(C)','Line4','Line5','Line6','Line7','Line8','C1','C2','C3','C4'],r.line||'—')}</td>
       <td style="padding:4px;">${sel('formula',['—','701','901','POLY','97LC','MS9123','MS3618','BROODS','TNT','OTHERS'],r.formula||'—')}</td>
       <td style="padding:4px;">${selSub(i, r.formula||'—', r.subformula||'')}</td>
       <td style="padding:4px;"><input type="text" value="${r.feedcode||''}" onchange="updateSVRow(${i},'feedcode',this.value)" placeholder="Feed Code" style="width:100%;border:1px solid var(--border);border-radius:4px;padding:5px 6px;font-size:12px;font-family:inherit;background:var(--surface);color:var(--text);outline:none;" /></td>
-      <td style="padding:4px;">${sel('diesize',['—','1.0','1.2','1.4','1.7','2.0','2.3','Crumble'],r.diesize||'—')}</td>
+      <td style="padding:4px;">${selDie(i, r.subformula||'', r.diesize||'—')}</td>
       <td style="padding:4px;">${inp('sv',r.sv||'','number','0.01')}</td>
       <td style="padding:6px;text-align:center;color:var(--text2);">${svMin}</td>
       <td style="padding:6px;text-align:center;color:var(--text2);">${svMax}</td>
@@ -1625,7 +1662,8 @@ function renderSVRows() {
 
 function updateSVRow(i, key, val) {
   svRows[i][key] = val;
-  if(key === 'formula') svRows[i].subformula = ''; // reset sub when formula changes
+  if(key === 'formula') { svRows[i].subformula = ''; svRows[i].diesize = '—'; }
+  if(key === 'subformula') svRows[i].diesize = '—'; // reset die size when sub changes
   renderSVRows();
 }
 function addSVRow() { svRows.push({line:'—',formula:'—',subformula:'None',feedcode:'',diesize:'—',sv:'',st:''}); renderSVRows(); }
