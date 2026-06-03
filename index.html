@@ -640,6 +640,8 @@ tr:hover td{background:var(--bg);}
       <span class="chip active" data-param="sink"    onclick="toggleParam(this)">⏱ Sinking Time</span>
       <span class="chip active" data-param="sizing"  onclick="toggleParam(this)">📏 % Sizing</span>
       <span class="chip active" data-param="color"   onclick="toggleParam(this)">🎨 Color (L*a*b*)</span>
+      <span class="chip active" data-param="mir_m"   onclick="toggleParam(this)">🔬 %M (IR)</span>
+      <span class="chip active" data-param="mir_l"   onclick="toggleParam(this)">🎨 L* (เครื่องวัดสี)</span>
     </div>
   </div>
   <div class="stats-grid" id="stats-grid"></div>
@@ -1462,15 +1464,13 @@ async function saveRecord() {
     // ส่ง Sizing Spec ไปด้วยเพื่อให้ Apps Script คำนวณ Pass/Fail
     lowerSpecMax: (()=>{ const s=getSizingSpec(g('f-diesize')); return s?s.lowerMax:''; })(),
     insizeSpecMin:(()=>{ const s=getSizingSpec(g('f-diesize')); return s?s.insizeMin:''; })(),
-    // ส่ง Spec ไปด้วยเพื่อให้ Apps Script คำนวณ Pass/Fail
-    get cpMin(){ const s=getSpec(this.formula); return s?s.cpMin:''; },
-    get cpMax(){ const s=getSpec(this.formula); return s?s.cpMax:''; },
-    get lMin(){ const s=getSpec(this.formula); return s?s.lMin:''; },
-    get lMax(){ const s=getSpec(this.formula); return s?s.lMax:''; },
-    get mMin(){ const s=getSpec(this.formula); return s?s.mMin:''; },
-    get mMax(){ const s=getSpec(this.formula); return s?s.mMax:''; },
     savedAt:tsStr
   };
+  // resolve spec values as plain properties
+  const specData = getSpec(rec.formula||'') || {};
+  rec.cpMin = specData.cpMin||''; rec.cpMax = specData.cpMax||'';
+  rec.lMin  = specData.lMin||'';  rec.lMax  = specData.lMax||'';
+  rec.mMin  = specData.mMin||'';  rec.mMax  = specData.mMax||'';
   records.unshift(rec);
   localStorage.setItem('qc_records', JSON.stringify(records));
   const tsEl=document.getElementById('ts-val'), toast=document.getElementById('success-toast');
@@ -1482,8 +1482,28 @@ async function saveRecord() {
     const iframeName='iframe_'+Date.now();
     const iframe=document.createElement('iframe'); iframe.name=iframeName; iframe.style.display='none'; document.body.appendChild(iframe);
     const form=document.createElement('form'); form.method='POST'; form.action=SHEETS_URL; form.target=iframeName; form.style.display='none';
-    const payload = { ...rec, dataType: currentFormType==='sizing' ? 'sizing' : 'quality' };
-    Object.entries(payload).forEach(([k,v])=>{ const i=document.createElement('input'); i.type='hidden'; i.name=k; i.value=v??''; form.appendChild(i); });
+    const sp = getSpec(rec.formula||'');
+    const payload = {
+      ...rec,
+      dataType: currentFormType==='sizing' ? 'sizing' : 'quality',
+      cpMin: sp?sp.cpMin:'', cpMax: sp?sp.cpMax:'',
+      lMin:  sp?sp.lMin:'',  lMax:  sp?sp.lMax:'',
+      mMin:  sp?sp.mMin:'',  mMax:  sp?sp.mMax:'',
+    };
+    // remove getter properties
+    delete payload.cpMin; delete payload.cpMax;
+    delete payload.lMin;  delete payload.lMax;
+    delete payload.mMin;  delete payload.mMax;
+    const safePayload = {
+      ...payload,
+      cpMin: sp?sp.cpMin:'', cpMax: sp?sp.cpMax:'',
+      lMin:  sp?sp.lMin:'',  lMax:  sp?sp.lMax:'',
+      mMin:  sp?sp.mMin:'',  mMax:  sp?sp.mMax:'',
+    };
+    Object.entries(safePayload).forEach(([k,v])=>{
+      if(typeof v === 'function') return;
+      const i=document.createElement('input'); i.type='hidden'; i.name=k; i.value=v??''; form.appendChild(i);
+    });
     document.body.appendChild(form); form.submit();
     setTimeout(()=>{ try{document.body.removeChild(form);}catch(e){} try{document.body.removeChild(iframe);}catch(e){} },3000);
     toast.textContent='✅ บันทึกสำเร็จ! ข้อมูลส่งไป Google Sheets แล้ว';
