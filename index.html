@@ -352,7 +352,8 @@ tr:hover td{background:var(--bg);}
   </div>
   <div class="card">
     <div class="card-title">ข้อมูลการผลิต</div>
-    <div class="grid-3">
+    <!-- แถว 1: LINE | Main Formula | Sub Formula | Die Size -->
+    <div class="grid-3" style="grid-template-columns:1fr 1fr 1fr 1fr;">
       <div class="field"><label>5. LINE</label>
         <select id="f-line"><option value="">-- Select --</option>
           <option>Line1(A)</option><option>Line2(B)</option><option>Line3(C)</option><option>Line4</option>
@@ -360,18 +361,8 @@ tr:hover td{background:var(--bg);}
           <option>C1</option><option>C2</option><option>C3</option><option>C4</option>
         </select>
       </div>
-      <div class="field"><label>6. Die Size</label>
-        <select id="f-diesize" onchange="updateSizingPF();const oth=document.getElementById('diesize-others-field');if(oth)oth.style.display=this.value==='OTHERS'?'':'none';">
-          <option value="">-- Select --</option>
-          <option>1.0</option><option>1.2</option><option>1.4</option><option>1.7</option>
-          <option>2.0</option><option>2.3</option><option>Crumble</option>
-        </select>
-        <div id="diesize-others-field" style="display:none;margin-top:6px;">
-          <input type="text" id="f-diesize-others" placeholder="ระบุ Die Size..." style="border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 10px;font-size:14px;font-family:inherit;width:100%;outline:none;" />
-        </div>
-      </div>
       <div class="field">
-        <label>7. Main Formula</label>
+        <label>6. Main Formula</label>
         <select id="f-formula" onchange="toggleOthers();updateFormPF();updateSubFormulaOptions()">
           <option value="">-- Select --</option>
           <option>701</option><option>901</option><option>POLY</option>
@@ -379,15 +370,8 @@ tr:hover td{background:var(--bg);}
           <option>BROODS</option><option>TNT</option><option value="OTHERS">OTHERS</option>
         </select>
       </div>
-    </div>
-    <div style="height:10px;"></div>
-    <div class="grid-3">
-      <div class="field" id="others-field" style="display:none;">
-        <label>ระบุ Main Formula</label>
-        <input type="text" id="f-formula-others" placeholder="ระบุสูตร..." />
-      </div>
       <div class="field">
-        <label>8. Sub Formula</label>
+        <label>7. Sub Formula</label>
         <select id="f-subformula" onchange="toggleSubOthers()">
           <option value="">-- Select --</option>
           <option>P</option><option>S</option><option>G</option><option>NK</option>
@@ -397,6 +381,24 @@ tr:hover td{background:var(--bg);}
         <div id="sub-others-field" style="display:none;margin-top:6px;">
           <input type="text" id="f-subformula-others" placeholder="ระบุ Sub Formula..." style="border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 10px;font-size:14px;font-family:inherit;width:100%;outline:none;" />
         </div>
+      </div>
+      <div class="field"><label>8. Die Size</label>
+        <select id="f-diesize" onchange="updateSizingPF();const oth=document.getElementById('diesize-others-field');if(oth)oth.style.display=this.value==='OTHERS'?'':'none';">
+          <option value="">-- Select --</option>
+          <option>1.0</option><option>1.2</option><option>1.4</option><option>1.7</option>
+          <option>2.0</option><option>2.3</option><option>Crumble</option>
+        </select>
+        <div id="diesize-others-field" style="display:none;margin-top:6px;">
+          <input type="text" id="f-diesize-others" placeholder="ระบุ Die Size..." style="border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 10px;font-size:14px;font-family:inherit;width:100%;outline:none;" />
+        </div>
+      </div>
+    </div>
+    <div style="height:10px;"></div>
+    <!-- แถว 2: Main Formula Others | Feed Code | Lot -->
+    <div class="grid-3">
+      <div class="field" id="others-field" style="display:none;">
+        <label>ระบุ Main Formula</label>
+        <input type="text" id="f-formula-others" placeholder="ระบุสูตร..." />
       </div>
       <div class="field"><label>9. Feed Code</label><input type="text" id="f-feedcode" placeholder="Feed code" /></div>
       <div class="field"><label>10. Lot</label><input type="text" id="f-lot" placeholder="Lot number" /></div>
