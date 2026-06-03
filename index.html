@@ -311,12 +311,12 @@ tr:hover td{background:var(--bg);}
     <div class="card-title">ข้อมูลทั่วไป</div>
     <div class="grid-2">
       <div class="field"><label>1. วันที่</label><input type="date" id="f-date" /></div>
-      <div class="field"><label>3. Checked By</label><select id="f-inspector"><option value="">-- Select Inspector --</option></select></div>
+      <div class="field"><label>2. Checked By</label><select id="f-inspector"><option value="">-- Select Inspector --</option></select></div>
     </div>
     <div style="height:10px;"></div>
     <div class="grid-3">
-      <div class="field"><label>4. Shift</label><select id="f-shift" onchange="updateSamplingTime()"><option value="">-- Select --</option><option>P1</option><option>P2</option><option>P3</option></select></div>
-      <div class="field"><label>2. Sampling Time</label>
+      <div class="field"><label>3. Shift</label><select id="f-shift" onchange="updateSamplingTime()"><option value="">-- Select --</option><option>P1</option><option>P2</option><option>P3</option></select></div>
+      <div class="field"><label>4. Sampling Time</label>
         <select id="f-time">
           <option value="">-- เลือก Shift ก่อน --</option>
         </select>
@@ -339,7 +339,7 @@ tr:hover td{background:var(--bg);}
   <div class="card">
     <div class="card-title">ตำแหน่ง Sampling</div>
     <div class="field">
-      <select id="f-sampling" onchange="toggleSamplingOthers()">
+      <select id="f-sampling" onchange="toggleSamplingOthers();updateLineOptions()">
         <option value="">-- Select Sampling Position --</option>
         <option>Mix1</option>
         <option>Mix2</option>
@@ -697,7 +697,7 @@ tr:hover td{background:var(--bg);}
         </div>
         <div class="field">
           <label style="font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.04em;">Sampling *</label>
-          <select id="sv-entry-sampling">
+          <select id="sv-entry-sampling" onchange="updateSVLineOptions()">
             <option value="">-- เลือก Sampling --</option>
             <option>Mix1</option><option>Mix2</option><option>หลังบด</option><option>Feeder</option>
             <option>ก่อนลง DIE</option><option>หลัง DIE</option><option>HB</option>
@@ -905,7 +905,7 @@ tr:hover td{background:var(--bg);}
         </div>
         <div class="field">
           <label style="font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.04em;">Sampling *</label>
-          <select id="mir-sampling">
+          <select id="mir-sampling" onchange="updateMIRLineOptions()">
             <option value="">-- Select --</option>
             <option>Mix1</option><option>Mix2</option><option>หลังบด</option><option>Feeder</option>
             <option>ก่อนลง DIE</option><option>หลัง DIE</option><option>HB</option>
@@ -1367,6 +1367,34 @@ function toggleOthers() {
   if (val !== 'OTHERS') document.getElementById('f-formula-others').value = '';
 }
 
+function updateLineOptions() {
+  const sampling = g('f-sampling');
+  const sel = document.getElementById('f-line');
+  const cur = sel.value;
+  const mix2Lines = ['Line1(A)','Line2(B)','Line3(C)'];
+  const allLines  = ['Line1(A)','Line2(B)','Line3(C)','Line4','Line5','Line6','Line7','Line8','C1','C2','C3','C4'];
+  const opts = sampling === 'Mix2' ? mix2Lines : allLines;
+  sel.innerHTML = '<option value="">-- Select --</option>' +
+    opts.map(o=>`<option${o===cur?' selected':''}>${o}</option>`).join('');
+  if(cur && !opts.includes(cur)) sel.value = '';
+}
+
+// Line options for SV and MIR table rows based on sampling
+function getLineOpts(sampling) {
+  const mix2Lines = ['—','Line1(A)','Line2(B)','Line3(C)'];
+  const allLines  = ['—','Line1(A)','Line2(B)','Line3(C)','Line4','Line5','Line6','Line7','Line8','C1','C2','C3','C4'];
+  return sampling === 'Mix2' ? mix2Lines : allLines;
+}
+
+function updateSVLineOptions() {
+  // re-render rows so LINE dropdown filters
+  renderSVRows();
+}
+
+function updateMIRLineOptions() {
+  renderMIRRows();
+}
+
 function toggleSamplingOthers() {
   const val = document.getElementById('f-sampling').value;
   document.getElementById('sampling-others-field').style.display = val === 'Others' ? '' : 'none';
@@ -1750,6 +1778,8 @@ function renderSVRows() {
           ? '<span style="color:#0F6E56;font-weight:600;">PASS</span>'
           : '<span style="color:#993C1D;font-weight:600;">FAIL</span>')
       : '—';
+    const svSampling = document.getElementById('sv-entry-sampling')?.value || '';
+    const lineOpts = getLineOpts(svSampling);
     const sel = (id,opts,val) => `<select onchange="updateSVRow(${i},'${id}',this.value)" style="width:100%;border:1px solid var(--border);border-radius:4px;padding:5px 4px;font-size:12px;font-family:inherit;background:var(--surface);color:var(--text);outline:none;">${opts.map(o=>`<option${o===val?' selected':''}>${o}</option>`).join('')}</select>`;
     const selSub = (idx, formula, curVal) => {
       const opts = SUB_FORMULA_MAP[formula] || ['P','S','G','NK','PM','B1','B2','B3','NONE','OTHERS'];
@@ -1779,7 +1809,7 @@ function renderSVRows() {
     const inp = (id,val,type='text',step='') => `<input type="${type}" value="${val}" step="${step}" onchange="updateSVRow(${i},'${id}',this.value)" style="width:100%;border:1px solid var(--border);border-radius:4px;padding:5px 6px;font-size:12px;font-family:monospace;background:var(--surface);color:var(--text);outline:none;text-align:center;" />`;
     return `<tr style="border-bottom:1px solid var(--border);">
       <td style="padding:6px;text-align:center;"><button onclick="removeSVRow(${i})" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:14px;padding:2px 4px;">✕</button></td>
-      <td style="padding:4px;">${sel('line',['—','Line1(A)','Line2(B)','Line3(C)','Line4','Line5','Line6','Line7','Line8','C1','C2','C3','C4'],r.line||'—')}</td>
+      <td style="padding:4px;">${sel('line',lineOpts,r.line||'—')}</td>
       <td style="padding:4px;">${sel('formula',['—','701','901','POLY','97LC','MS9123','MS3618','BROODS','TNT','OTHERS'],r.formula||'—')}</td>
       <td style="padding:4px;">${selSub(i, r.formula||'—', r.subformula||'')}</td>
       <td style="padding:4px;"><input type="text" value="${r.feedcode||''}" onchange="updateSVRow(${i},'feedcode',this.value)" placeholder="Feed Code" style="width:100%;border:1px solid var(--border);border-radius:4px;padding:5px 6px;font-size:12px;font-family:inherit;background:var(--surface);color:var(--text);outline:none;" /></td>
@@ -1875,6 +1905,8 @@ function selectMIRCheck(type) {
 
 function renderMIRRows() {
   const tbody = document.getElementById('mir-tbody'); if(!tbody) return;
+  const mirSampling = document.getElementById('mir-sampling')?.value || '';
+  const mirLineOpts = getLineOpts(mirSampling);
   const sel = (id,i,opts,val) => `<select onchange="updateMIRRow(${i},'${id}',this.value)" style="width:100%;border:1px solid var(--border);border-radius:4px;padding:5px 4px;font-size:12px;font-family:inherit;background:var(--surface);color:var(--text);outline:none;">${opts.map(o=>`<option${o===val?' selected':''}>${o}</option>`).join('')}</select>`;
   const inp = (id,i,val,type='text') => `<input type="${type}" value="${val}" step="0.01" onchange="updateMIRRow(${i},'${id}',this.value)" style="width:100%;border:1px solid var(--border);border-radius:4px;padding:5px 6px;font-size:12px;font-family:monospace;background:var(--surface);color:var(--text);outline:none;text-align:center;" />`;
   const mirSelSub = (i, formula, curVal) => {
@@ -1891,7 +1923,7 @@ function renderMIRRows() {
     const mRes = sp ? pfBadge(r.m, sp.mMin, sp.mMax) : '—';
     return `<tr style="border-bottom:1px solid var(--border);">
       <td style="padding:6px;text-align:center;"><button onclick="removeMIRRow(${i})" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:14px;">✕</button></td>
-      <td style="padding:4px;">${sel('line',i,['—','Line1(A)','Line2(B)','Line3(C)','Line4','Line5','Line6','Line7','Line8','C1','C2','C3','C4'],r.line||'—')}</td>
+      <td style="padding:4px;">${sel('line',i,mirLineOpts,r.line||'—')}</td>
       <td style="padding:4px;">${sel('formula',i,['—','701','901','POLY','97LC','MS9123','MS3618','BROODS','TNT','OTHERS'],r.formula||'—')}</td>
       <td style="padding:4px;">${mirSelSub(i, r.formula||'—', r.subformula||'—')}</td>
       <td style="padding:4px;"><input type="text" value="${r.feedcode||''}" onchange="updateMIRRow(${i},'feedcode',this.value)" placeholder="Feed Code" style="width:100%;border:1px solid var(--border);border-radius:4px;padding:5px 6px;font-size:12px;font-family:inherit;background:var(--surface);color:var(--text);outline:none;" /></td>
