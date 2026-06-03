@@ -225,8 +225,21 @@ tr:hover td{background:var(--bg);}
             <i class="ti ti-flask" aria-hidden="true" style="font-size:24px;color:#0F6E56;"></i>
           </div>
           <div style="padding:14px 16px;">
-            <div style="font-size:15px;font-weight:600;color:var(--text);margin-bottom:3px;">%M, CP, L*</div>
+            <div style="font-size:15px;font-weight:600;color:var(--text);margin-bottom:3px;">%M, CP, Color (NIR)</div>
             <div style="font-size:12px;color:var(--text2);line-height:1.4;">%M · CP · FAT · Fiber · Bulk NIR · Color L*a*b*</div>
+          </div>
+          <i class="ti ti-chevron-right" aria-hidden="true" style="font-size:16px;color:var(--text3);margin-left:auto;margin-right:14px;"></i>
+        </div>
+      </button>
+
+      <button onclick="goToMIR()" style="width:100%;padding:0;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);cursor:pointer;text-align:left;transition:all 0.18s;font-family:inherit;overflow:hidden;" onmouseover="this.style.borderColor='#1D7A9E';this.style.boxShadow='0 2px 12px rgba(29,122,158,0.12)'" onmouseout="this.style.borderColor='var(--border)';this.style.boxShadow='none'">
+        <div style="display:flex;align-items:center;">
+          <div style="width:56px;min-height:80px;background:#E3F4FB;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <i class="ti ti-chart-bar" aria-hidden="true" style="font-size:24px;color:#0D5C78;"></i>
+          </div>
+          <div style="padding:14px 16px;">
+            <div style="font-size:15px;font-weight:600;color:var(--text);margin-bottom:3px;">%M (IR) & Color (เครื่องวัดสี)</div>
+            <div style="font-size:12px;color:var(--text2);line-height:1.4;">%M (IR) · L* · a* · b* (เครื่องวัดสี)</div>
           </div>
           <i class="ti ti-chevron-right" aria-hidden="true" style="font-size:16px;color:var(--text3);margin-left:auto;margin-right:14px;"></i>
         </div>
@@ -316,13 +329,11 @@ tr:hover td{background:var(--bg);}
       <button class="purpose-btn" id="btn-round" onclick="selectPurpose('round')">🔄 ตามรอบ</button>
       <button class="purpose-btn" id="btn-recheck" onclick="selectPurpose('recheck')">⚠️ Recheck</button>
     </div>
-    <div id="method-field" class="field">
-      <label>Select Method</label>
-      <select id="f-color-method">
-        <option value="">-- Select Method --</option>
-        <option>IR</option>
-        <option>เครื่องวัดสี</option>
-      </select>
+    <div id="recheck-time-field" style="display:none;margin-bottom:12px;">
+      <div class="field">
+        <label>เวลา Recheck</label>
+        <input type="time" id="f-recheck-time" style="border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 10px;font-size:14px;font-family:inherit;width:100%;outline:none;" />
+      </div>
     </div>
   </div>
   <div class="card">
@@ -710,6 +721,13 @@ tr:hover td{background:var(--bg);}
           </div>
         </div>
       </div>
+      <!-- Recheck time row -->
+      <div id="sv-recheck-time-row" style="display:none;margin-top:10px;">
+        <div class="field" style="max-width:200px;">
+          <label style="font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.04em;">เวลา Recheck</label>
+          <input type="time" id="sv-recheck-time" style="border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 10px;font-size:14px;font-family:inherit;width:100%;outline:none;" />
+        </div>
+      </div>
     </div>
 
     <!-- SV Table -->
@@ -849,6 +867,113 @@ tr:hover td{background:var(--bg);}
       <button onclick="showPage('home',document.querySelector('.nav-tab'));document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));document.querySelector('.nav-tab').classList.add('active');"
         style="background:var(--surface);border:1px solid var(--border);cursor:pointer;padding:10px 20px;border-radius:var(--radius-sm);font-size:13px;font-family:inherit;color:var(--text);">
         🏠 หน้าหลัก
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- MIR PAGE -->
+<div class="page" id="page-mir">
+  <div style="max-width:100%;overflow-x:auto;">
+    <div class="dash-header"><h2>📊 %M (IR) & Color (เครื่องวัดสี)</h2></div>
+
+    <!-- Header Info -->
+    <div class="card" style="margin-bottom:12px;">
+      <!-- แถว 1: วันที่ Inspector Shift -->
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px;">
+        <div class="field">
+          <label style="font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.04em;">วันที่ *</label>
+          <input type="date" id="mir-date" />
+        </div>
+        <div class="field">
+          <label style="font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.04em;">Inspector *</label>
+          <select id="mir-inspector"><option value="">-- Select Inspector --</option></select>
+        </div>
+        <div class="field">
+          <label style="font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.04em;">Shift *</label>
+          <select id="mir-shift" onchange="updateMIRSamplingTime()">
+            <option value="">-- เลือก Shift --</option>
+            <option>P1</option><option>P2</option><option>P3</option>
+          </select>
+        </div>
+      </div>
+      <!-- แถว 2: Sampling Time + Sampling + Check -->
+      <div style="display:grid;grid-template-columns:1fr 1fr 0.7fr;gap:12px;align-items:end;">
+        <div class="field">
+          <label style="font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.04em;">เวลา (Sampling Time) *</label>
+          <select id="mir-time"><option value="">-- เลือก Shift ก่อน --</option></select>
+        </div>
+        <div class="field">
+          <label style="font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.04em;">Sampling *</label>
+          <select id="mir-sampling">
+            <option value="">-- Select --</option>
+            <option>Mix1</option><option>Mix2</option><option>หลังบด</option><option>Feeder</option>
+            <option>ก่อนลง DIE</option><option>หลัง DIE</option><option>HB</option>
+            <option>Dryer</option><option>Cooler</option><option>After Sieve</option>
+            <option>Packing</option><option>Before Sieve</option><option>Others</option>
+          </select>
+        </div>
+        <div class="field">
+          <label style="font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.04em;">Check</label>
+          <div style="display:flex;gap:6px;height:42px;">
+            <button id="mir-check-round" onclick="selectMIRCheck('round')"
+              style="flex:1;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--text2);cursor:pointer;font-family:inherit;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;transition:all 0.15s;">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1a3a8f" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m9 12 2 2 4-4"/></svg>
+              <span style="font-size:9px;font-weight:500;">ตรวจสอบ</span>
+            </button>
+            <button id="mir-check-recheck" onclick="selectMIRCheck('recheck')"
+              style="flex:1;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--text2);cursor:pointer;font-family:inherit;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;transition:all 0.15s;">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#534AB7" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11A8.1 8.1 0 0 0 4.5 9M4 5v4h4"/><path d="M4 13a8.1 8.1 0 0 0 15.5 2m.5 4v-4h-4"/></svg>
+              <span style="font-size:9px;font-weight:500;">Recheck</span>
+            </button>
+          </div>
+        </div>
+      </div>
+      <!-- Recheck time -->
+      <div id="mir-recheck-time-row" style="display:none;margin-top:10px;max-width:200px;">
+        <div class="field">
+          <label style="font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;">เวลา Recheck</label>
+          <input type="time" id="mir-recheck-time" style="border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 10px;font-size:14px;font-family:inherit;width:100%;outline:none;" />
+        </div>
+      </div>
+    </div>
+
+    <!-- Table -->
+    <div class="table-card">
+      <div style="overflow-x:auto;">
+        <table id="mir-table" style="width:100%;border-collapse:collapse;font-size:12px;min-width:800px;">
+          <thead>
+            <tr>
+              <th rowspan="2" style="padding:10px 8px;background:#1a3a5c;color:#fff;text-align:center;border:1px solid rgba(255,255,255,0.15);width:32px;"></th>
+              <th rowspan="2" style="padding:10px 8px;background:#1a3a5c;color:#fff;text-align:center;border:1px solid rgba(255,255,255,0.15);">LINE</th>
+              <th rowspan="2" style="padding:10px 8px;background:#1a3a5c;color:#fff;text-align:center;border:1px solid rgba(255,255,255,0.15);">MAIN<br>FORMULA</th>
+              <th rowspan="2" style="padding:10px 8px;background:#1a3a5c;color:#fff;text-align:center;border:1px solid rgba(255,255,255,0.15);">SUB<br>FORMULA</th>
+              <th rowspan="2" style="padding:10px 8px;background:#1a3a5c;color:#fff;text-align:center;border:1px solid rgba(255,255,255,0.15);">FEED CODE</th>
+              <th rowspan="2" style="padding:10px 8px;background:#1a3a5c;color:#fff;text-align:center;border:1px solid rgba(255,255,255,0.15);">DIE SIZE</th>
+              <th colspan="2" style="padding:8px;background:#1e6b3a;color:#fff;text-align:center;border:1px solid rgba(255,255,255,0.15);">%M (IR)</th>
+              <th colspan="3" style="padding:8px;background:#6b3a1e;color:#fff;text-align:center;border:1px solid rgba(255,255,255,0.15);">Color (เครื่องวัดสี)</th>
+            </tr>
+            <tr>
+              <th style="padding:8px;background:#256b42;color:#fff;text-align:center;border:1px solid rgba(255,255,255,0.15);">%M</th>
+              <th style="padding:8px;background:#256b42;color:#fff;text-align:center;border:1px solid rgba(255,255,255,0.15);">Result</th>
+              <th style="padding:8px;background:#7a4520;color:#fff;text-align:center;border:1px solid rgba(255,255,255,0.15);">L*</th>
+              <th style="padding:8px;background:#7a4520;color:#fff;text-align:center;border:1px solid rgba(255,255,255,0.15);">a*</th>
+              <th style="padding:8px;background:#7a4520;color:#fff;text-align:center;border:1px solid rgba(255,255,255,0.15);">b*</th>
+            </tr>
+          </thead>
+          <tbody id="mir-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Bottom Actions -->
+    <div style="display:flex;gap:10px;margin-top:14px;padding-bottom:24px;align-items:center;">
+      <button class="btn btn-primary" onclick="addMIRRow()" style="padding:12px 20px;font-size:14px;">+ เพิ่มแถว</button>
+      <button class="btn btn-excel" onclick="saveMIRRows()" style="padding:12px 24px;font-size:14px;">💾 บันทึกข้อมูล</button>
+      <button onclick="showPage('home',document.querySelector('.nav-tab'));document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));document.querySelector('.nav-tab').classList.add('active');"
+        style="background:var(--surface);border:1px solid var(--border);cursor:pointer;padding:12px 16px;border-radius:var(--radius-sm);color:var(--text);transition:all 0.15s;display:inline-flex;align-items:center;gap:6px;font-size:14px;font-family:inherit;"
+        onmouseover="this.style.background='var(--bg)'" onmouseout="this.style.background='var(--surface)'">
+        <i class="ti ti-home" aria-hidden="true" style="font-size:18px;"></i> หน้าหลัก
       </button>
     </div>
   </div>
@@ -1131,7 +1256,7 @@ function selectFormType(type) {
   const methodFld  = document.getElementById('method-field');
   if(methodFld)  methodFld.style.display  = type==='sizing' ? 'none' : '';
 
-  const titles = { quality:'🧪 %M, CP, L*', sizing:'📏 Sizing & Bulk Density' };
+  const titles = { quality:'🧪 %M, CP, Color (NIR)', sizing:'📏 Sizing & Bulk Density' };
   const titleEl = document.getElementById('form-type-title');
   if(titleEl) titleEl.textContent = titles[type] || 'การวัดค่า';
 }
@@ -1168,6 +1293,8 @@ function selectPurpose(type) {
   purposeVal = type;
   document.getElementById('btn-round').className = 'purpose-btn' + (type === 'round' ? ' active-round' : '');
   document.getElementById('btn-recheck').className = 'purpose-btn' + (type === 'recheck' ? ' active-recheck' : '');
+  const recheckField = document.getElementById('recheck-time-field');
+  if(recheckField) recheckField.style.display = type === 'recheck' ? '' : 'none';
 }
 
 const SAMPLING_TIMES = {
@@ -1279,7 +1406,7 @@ async function saveRecord() {
   const rec = {
     id: Date.now(),
     date:g('f-date'), time:g('f-time'), inspector:g('f-inspector'), shift:g('f-shift'),
-    purpose:purposeVal,
+    purpose:purposeVal, recheckTime: purposeVal==='recheck' ? (document.getElementById('f-recheck-time')?.value||'') : '',
     sampling: g('f-sampling')==='Others' ? (g('f-sampling-others')||'Others') : g('f-sampling'),
     line:g('f-line'), lot:g('f-lot'), feedcode:g('f-feedcode'), diesize:g('f-diesize'),
     formula:g('f-formula')==='OTHERS'?(g('f-formula-others')||'OTHERS'):g('f-formula'),
@@ -1351,6 +1478,10 @@ function clearForm() {
   purposeVal = '';
   document.getElementById('btn-round').className = 'purpose-btn';
   document.getElementById('btn-recheck').className = 'purpose-btn';
+  const recheckField = document.getElementById('recheck-time-field');
+  if(recheckField) recheckField.style.display = 'none';
+  const recheckTime = document.getElementById('f-recheck-time');
+  if(recheckTime) recheckTime.value = '';
   // hide others fields
   document.getElementById('others-field').style.display = 'none';
   document.getElementById('sampling-others-field').style.display = 'none';
@@ -1580,6 +1711,8 @@ function selectSVCheck(type) {
     btnC.style.borderColor = type==='recheck' ? '#534AB7' : 'var(--border)';
     btnC.querySelector('span').style.color = type==='recheck' ? '#534AB7' : 'var(--text2)';
   }
+  const rtRow = document.getElementById('sv-recheck-time-row');
+  if(rtRow) rtRow.style.display = type === 'recheck' ? '' : 'none';
 }
 
 function updateSVSamplingTime() {
@@ -1687,7 +1820,9 @@ function saveSVRows() {
       svResult:sp&&r.sv?(parseFloat(r.sv)>=sp.svMin&&parseFloat(r.sv)<=sp.svMax?'PASS':'FAIL'):'',
       stSpecMax:sp?sp.stMax:'',
       stResult:sp&&r.st?(parseFloat(r.st)<=sp.stMax?'PASS':'FAIL'):'',
-      savedAt:tsStr, purpose:'sv', sampling:'', lot:'', colorMethod:'',
+      svCheckType,
+      recheckTime: svCheckType==='recheck' ? (document.getElementById('sv-recheck-time')?.value||'') : '',
+      savedAt:tsStr, purpose:'sv', sampling:document.getElementById('sv-entry-sampling')?.value||'', lot:'', colorMethod:'',
       cp:'', fat:'', fiber:'', colorM:'', colorL:'', colorA:'', colorB:'',
     };
     records.unshift(rec);
@@ -1702,6 +1837,108 @@ function saveSVRows() {
   localStorage.setItem('qc_records',JSON.stringify(records));
   svRows=[]; addSVRow();
   alert('✅ บันทึกสำเร็จ '+records.filter(r=>r.purpose==='sv').length+' รายการ');
+}
+
+// ===== MIR PAGE (%M IR & Color) =====
+let mirRows = [];
+let mirCheckType = '';
+
+function goToMIR() {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-mir').classList.add('active');
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  syncInspectorDropdown();
+  const now = new Date();
+  document.getElementById('mir-date').value = now.toISOString().split('T')[0];
+  if(!mirRows.length) addMIRRow();
+  renderMIRRows();
+}
+
+function updateMIRSamplingTime() {
+  const shift = document.getElementById('mir-shift').value;
+  const sel   = document.getElementById('mir-time');
+  const times = SAMPLING_TIMES[shift] || [];
+  sel.innerHTML = times.length
+    ? '<option value="">-- Select Time --</option>' + times.map(t=>`<option>${t}</option>`).join('')
+    : '<option value="">-- เลือก Shift ก่อน --</option>';
+}
+
+function selectMIRCheck(type) {
+  mirCheckType = type;
+  const btnR = document.getElementById('mir-check-round');
+  const btnC = document.getElementById('mir-check-recheck');
+  if(btnR) { btnR.style.background = type==='round' ? 'var(--blue-light)' : 'var(--surface)'; btnR.style.borderColor = type==='round' ? '#1a3a8f' : 'var(--border)'; btnR.querySelector('span').style.color = type==='round' ? '#1a3a8f' : 'var(--text2)'; }
+  if(btnC) { btnC.style.background = type==='recheck' ? 'var(--purple-light)' : 'var(--surface)'; btnC.style.borderColor = type==='recheck' ? '#534AB7' : 'var(--border)'; btnC.querySelector('span').style.color = type==='recheck' ? '#534AB7' : 'var(--text2)'; }
+  const row = document.getElementById('mir-recheck-time-row');
+  if(row) row.style.display = type === 'recheck' ? '' : 'none';
+}
+
+function renderMIRRows() {
+  const tbody = document.getElementById('mir-tbody'); if(!tbody) return;
+  const sel = (id,i,opts,val) => `<select onchange="updateMIRRow(${i},'${id}',this.value)" style="width:100%;border:1px solid var(--border);border-radius:4px;padding:5px 4px;font-size:12px;font-family:inherit;background:var(--surface);color:var(--text);outline:none;">${opts.map(o=>`<option${o===val?' selected':''}>${o}</option>`).join('')}</select>`;
+  const inp = (id,i,val,type='text') => `<input type="${type}" value="${val}" step="0.01" onchange="updateMIRRow(${i},'${id}',this.value)" style="width:100%;border:1px solid var(--border);border-radius:4px;padding:5px 6px;font-size:12px;font-family:monospace;background:var(--surface);color:var(--text);outline:none;text-align:center;" />`;
+  const mirSelSub = (i, formula, curVal) => {
+    const opts = SUB_FORMULA_MAP[formula] || ['P','S','G','NK','PM','B1','B2','B3','NONE','OTHERS'];
+    return `<select onchange="updateMIRRow(${i},'subformula',this.value)" style="width:100%;border:1px solid var(--border);border-radius:4px;padding:5px 4px;font-size:12px;font-family:inherit;background:var(--surface);color:var(--text);outline:none;">${['—',...opts].map(o=>`<option${o===curVal?' selected':''}>${o}</option>`).join('')}</select>`;
+  };
+  const mirSelDie = (i, sub, curVal) => {
+    const dm = {'S':['1.0','1.2','1.4','OTHERS'],'G':['1.7','2.0','2.3','OTHERS']};
+    const opts = dm[sub] || ['1.0','1.2','1.4','1.7','2.0','2.3','Crumble'];
+    return `<select onchange="updateMIRRow(${i},'diesize',this.value)" style="width:100%;border:1px solid var(--border);border-radius:4px;padding:5px 4px;font-size:12px;font-family:inherit;background:var(--surface);color:var(--text);outline:none;">${['—',...opts].map(o=>`<option${o===curVal?' selected':''}>${o}</option>`).join('')}</select>`;
+  };
+  tbody.innerHTML = mirRows.map((r,i) => {
+    const sp = getSpec(r.formula||'');
+    const mRes = sp ? pfBadge(r.m, sp.mMin, sp.mMax) : '—';
+    return `<tr style="border-bottom:1px solid var(--border);">
+      <td style="padding:6px;text-align:center;"><button onclick="removeMIRRow(${i})" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:14px;">✕</button></td>
+      <td style="padding:4px;">${sel('line',i,['—','Line1(A)','Line2(B)','Line3(C)','Line4','Line5','Line6','Line7','Line8','C1','C2','C3','C4'],r.line||'—')}</td>
+      <td style="padding:4px;">${sel('formula',i,['—','701','901','POLY','97LC','MS9123','MS3618','BROODS','TNT','OTHERS'],r.formula||'—')}</td>
+      <td style="padding:4px;">${mirSelSub(i, r.formula||'—', r.subformula||'—')}</td>
+      <td style="padding:4px;"><input type="text" value="${r.feedcode||''}" onchange="updateMIRRow(${i},'feedcode',this.value)" placeholder="Feed Code" style="width:100%;border:1px solid var(--border);border-radius:4px;padding:5px 6px;font-size:12px;font-family:inherit;background:var(--surface);color:var(--text);outline:none;" /></td>
+      <td style="padding:4px;">${mirSelDie(i, r.subformula||'', r.diesize||'—')}</td>
+      <td style="padding:4px;">${inp('m',i,r.m||'','number')}</td>
+      <td style="padding:6px;text-align:center;">${mRes}</td>
+      <td style="padding:4px;">${inp('colorL',i,r.colorL||'','number')}</td>
+      <td style="padding:4px;">${inp('colorA',i,r.colorA||'','number')}</td>
+      <td style="padding:4px;">${inp('colorB',i,r.colorB||'','number')}</td>
+    </tr>`;
+  }).join('');
+}
+
+function updateMIRRow(i, key, val) {
+  mirRows[i][key] = val;
+  if(key==='formula') { mirRows[i].subformula=''; mirRows[i].diesize='—'; }
+  if(key==='subformula') mirRows[i].diesize='—';
+  renderMIRRows();
+}
+function addMIRRow() { mirRows.push({line:'—',formula:'—',subformula:'—',feedcode:'',diesize:'—',m:'',colorL:'',colorA:'',colorB:''}); renderMIRRows(); }
+function removeMIRRow(i) { mirRows.splice(i,1); if(!mirRows.length) addMIRRow(); else renderMIRRows(); }
+
+function saveMIRRows() {
+  const saved = new Date();
+  const tsStr = saved.toLocaleDateString('th-TH',{day:'2-digit',month:'2-digit',year:'numeric'})+' '+saved.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  const date  = document.getElementById('mir-date').value;
+  const shift = document.getElementById('mir-shift').value;
+  const time  = document.getElementById('mir-time').value;
+  const insp  = document.getElementById('mir-inspector').value;
+  const samp  = document.getElementById('mir-sampling').value;
+  const recheckTime = mirCheckType==='recheck' ? (document.getElementById('mir-recheck-time')?.value||'') : '';
+  mirRows.filter(r=>r.m||r.colorL).forEach(r => {
+    const rec = { id:Date.now()+Math.random(), date, time, inspector:insp, shift,
+      sampling:samp, check:mirCheckType, recheckTime,
+      line:r.line, formula:r.formula, subformula:r.subformula, feedcode:r.feedcode, diesize:r.diesize,
+      colorM:r.m, colorL:r.colorL, colorA:r.colorA, colorB:r.colorB,
+      colorMethod:'IR+เครื่องวัดสี', savedAt:tsStr, dataType:'mir'
+    };
+    const iframeName='mir_iframe_'+Date.now()+Math.random();
+    const iframe=document.createElement('iframe'); iframe.name=iframeName; iframe.style.display='none'; document.body.appendChild(iframe);
+    const form=document.createElement('form'); form.method='POST'; form.action=SHEETS_URL; form.target=iframeName; form.style.display='none';
+    Object.entries(rec).forEach(([k,v])=>{const inp=document.createElement('input');inp.type='hidden';inp.name=k;inp.value=v??'';form.appendChild(inp);});
+    document.body.appendChild(form); form.submit();
+    setTimeout(()=>{try{document.body.removeChild(form);}catch(e){} try{document.body.removeChild(iframe);}catch(e){}},3000);
+  });
+  mirRows=[]; addMIRRow();
+  alert('✅ บันทึกสำเร็จ!');
 }
 
 // ===== RM PAGE =====
@@ -2090,7 +2327,7 @@ const DEFAULT_INSPECTORS = [
 let inspectors = JSON.parse(localStorage.getItem('qc_inspectors_simple') || 'null') || DEFAULT_INSPECTORS;
 
 function syncInspectorDropdown() {
-  const ids = ['f-inspector','sv-entry-inspector'];
+  const ids = ['f-inspector','sv-entry-inspector','mir-inspector'];
   ids.forEach(id => {
     const sel = document.getElementById(id);
     if(!sel) return;
