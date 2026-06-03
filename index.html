@@ -1427,7 +1427,6 @@ function updateColorPreview() {
     bar.style.background='var(--bg)'; lbl.style.color='var(--text3)'; lbl.textContent='ตัวอย่างสี (กรอก L* a* b*)';
   }
 }
-['f-color-l','f-color-a','f-color-b'].forEach(id => { document.getElementById(id).addEventListener('input', updateColorPreview); });
 
 async function saveRecord() {
   const saved = new Date();
@@ -2397,6 +2396,11 @@ document.addEventListener('DOMContentLoaded',function(){
   const homeDate = document.getElementById('home-date');
   if(homeDate) homeDate.textContent = now.toLocaleDateString('th-TH',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
   syncInspectorDropdown();
+  // Color preview listeners
+  ['f-color-l','f-color-a','f-color-b'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.addEventListener('input', updateColorPreview);
+  });
 });
 </script>
 </body>
